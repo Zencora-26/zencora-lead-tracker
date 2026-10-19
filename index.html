@@ -1,0 +1,3036 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zencora Health Solutions | BDE Lead Tracker</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- ChartJS for Analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        /* Design Tokens & Variables */
+        :root {
+            --primary: #8C1D1D;          /* Zencora Burgundy */
+            --primary-light: #FCE8E8;    /* Light Burgundy Fill */
+            --secondary: #2A628F;        /* Slate Blue */
+            --secondary-light: #EBF2F7;  /* Light Slate Fill */
+            --text-dark: #2B2B2B;       /* Charcoal Black */
+            --text-muted: #787878;      /* Muted Gray */
+            --bg-page: #F5F7FA;          /* Ice gray */
+            --bg-card: rgba(255, 255, 255, 0.85);
+            --border-color: #E2E8F0;
+            --border-radius-lg: 16px;
+            --border-radius-md: 10px;
+            --border-radius-sm: 6px;
+            --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.02);
+            --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
+            --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.03);
+            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Reset & Base Styles */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-page);
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+        h1, h2, h3, h4 {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+        }
+
+        /* App Layout Container */
+        .app-container {
+            display: none; /* hidden until authenticated */
+            min-height: 100vh;
+            position: relative;
+        }
+
+        /* Sidebar Styling */
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(180deg, #1E0606 0%, #0A141C 100%);
+            color: #FFFFFF;
+            padding: 2rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            z-index: 100;
+            box-shadow: 4px 0 24px rgba(0, 0, 0, 0.15);
+        }
+        .sidebar-brand {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 1.5rem;
+        }
+        .sidebar-logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            font-family: 'Outfit', sans-serif;
+            color: #FFFFFF;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .sidebar-logo span {
+            color: #FF5A5A;
+        }
+        .sidebar-subtitle {
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            margin-top: 4px;
+        }
+        
+        /* Active User Badge in Sidebar */
+        .user-profile-badge {
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--border-radius-md);
+            padding: 10px 14px;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .avatar-circle {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            color: #FFFFFF;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            border: 1.5px solid rgba(255, 255, 255, 0.2);
+            text-transform: uppercase;
+        }
+        .user-meta {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .user-meta-name {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #FFFFFF;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .user-meta-role {
+            font-size: 0.7rem;
+            font-weight: 500;
+            color: #8C1D1D;
+            background-color: var(--primary-light);
+            padding: 1px 6px;
+            border-radius: 4px;
+            width: fit-content;
+            text-transform: uppercase;
+            margin-top: 2px;
+        }
+        .user-meta-role.role-bde {
+            color: var(--secondary);
+            background-color: var(--secondary-light);
+        }
+
+        .nav-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex-grow: 1;
+        }
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            border-radius: var(--border-radius-md);
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.95rem;
+            color: rgba(255, 255, 255, 0.7);
+            transition: var(--transition);
+            gap: 12px;
+        }
+        .nav-item:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+            color: #FFFFFF;
+        }
+        .nav-item.active {
+            background: linear-gradient(90deg, var(--primary) 0%, var(--secondary) 100%);
+            color: #FFFFFF;
+            box-shadow: 0 4px 12px rgba(140, 29, 29, 0.3);
+        }
+        .sidebar-footer {
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .sync-btn {
+            background: linear-gradient(90deg, #27AE60 0%, #2ECC71 100%);
+            color: #FFFFFF;
+            border: none;
+            padding: 12px;
+            border-radius: var(--border-radius-md);
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 4px 10px rgba(46, 204, 113, 0.2);
+            transition: var(--transition);
+        }
+        .sync-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 14px rgba(46, 204, 113, 0.3);
+        }
+        .sync-btn:active {
+            transform: translateY(0);
+        }
+        
+        .logout-btn {
+            background-color: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: rgba(255, 255, 255, 0.6);
+            padding: 10px;
+            border-radius: var(--border-radius-md);
+            font-weight: 500;
+            font-size: 0.85rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: var(--transition);
+        }
+        .logout-btn:hover {
+            background-color: rgba(231, 76, 60, 0.15);
+            color: #E74C3C;
+            border-color: rgba(231, 76, 60, 0.3);
+        }
+
+        /* Main Content Frame */
+        .main-content {
+            margin-left: 280px;
+            flex-grow: 1;
+            padding: 2.5rem;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        /* Top Header Bar */
+        .content-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--bg-card);
+            backdrop-filter: blur(10px);
+            padding: 1.25rem 2rem;
+            border-radius: var(--border-radius-lg);
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-sm);
+        }
+        .header-title h2 {
+            font-size: 1.6rem;
+            color: var(--primary);
+            letter-spacing: -0.5px;
+        }
+        .header-title p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+        .btn {
+            padding: 10px 18px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            border-radius: var(--border-radius-md);
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-primary {
+            background-color: var(--primary);
+            color: #FFFFFF;
+        }
+        .btn-primary:hover {
+            background-color: #6E1616;
+            transform: translateY(-1px);
+        }
+        .btn-secondary {
+            background-color: #FFFFFF;
+            border-color: var(--border-color);
+            color: var(--text-dark);
+        }
+        .btn-secondary:hover {
+            background-color: var(--bg-page);
+            border-color: #CBD5E1;
+            transform: translateY(-1px);
+        }
+
+        /* View Panels */
+        .view-panel {
+            display: none;
+            flex-direction: column;
+            gap: 2rem;
+            animation: fadeIn 0.35s ease;
+        }
+        .view-panel.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Status Cards Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+        }
+        .stat-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(10px);
+            border-radius: var(--border-radius-lg);
+            border: 1px solid var(--border-color);
+            padding: 1.5rem;
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+            border-color: #CBD5E1;
+        }
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background-color: var(--secondary);
+        }
+        .stat-card.accent::before {
+            background-color: var(--primary);
+        }
+        .stat-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            font-family: 'Outfit', sans-serif;
+        }
+        .stat-desc {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        /* Leads Spreadsheet Section */
+        .leads-section {
+            background: var(--bg-card);
+            border-radius: var(--border-radius-lg);
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-md);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+        .leads-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1.25rem;
+        }
+        .search-filter-box {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+            flex-grow: 1;
+        }
+        .input-search {
+            padding: 10px 16px;
+            border-radius: var(--border-radius-md);
+            border: 1px solid var(--border-color);
+            font-size: 0.9rem;
+            width: 260px;
+            transition: var(--transition);
+        }
+        .input-search:focus {
+            outline: none;
+            border-color: var(--secondary);
+            box-shadow: 0 0 0 3px rgba(42, 98, 143, 0.15);
+        }
+        .select-filter {
+            padding: 10px 16px;
+            border-radius: var(--border-radius-md);
+            border: 1px solid var(--border-color);
+            font-size: 0.9rem;
+            background-color: #FFFFFF;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .select-filter:focus {
+            outline: none;
+            border-color: var(--secondary);
+        }
+
+        /* Modern Table Customization */
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: var(--border-radius-md);
+            border: 1px solid var(--border-color);
+            position: relative;
+            background-color: #FFFFFF;
+        }
+        .leads-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.88rem;
+            text-align: left;
+        }
+        .leads-table th {
+            background-color: var(--primary-light);
+            color: var(--primary);
+            font-weight: 700;
+            padding: 14px 16px;
+            border-bottom: 2px solid #F3A8A8;
+            font-family: 'Outfit', sans-serif;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.5px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .leads-table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-dark);
+            white-space: nowrap;
+            transition: var(--transition);
+            max-width: 250px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .leads-table tr:hover td {
+            background-color: #F8FAFC;
+        }
+        
+        /* Cell editable highlight */
+        .leads-table td.editable {
+            cursor: pointer;
+            position: relative;
+        }
+        .leads-table td.editable:hover::after {
+            content: '✏️';
+            position: absolute;
+            right: 4px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.7rem;
+            opacity: 0.6;
+        }
+        
+        /* Inline input styling */
+        .cell-input {
+            width: 100%;
+            padding: 6px 8px;
+            font-family: inherit;
+            font-size: inherit;
+            border: 1px solid var(--secondary);
+            border-radius: var(--border-radius-sm);
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(42, 98, 143, 0.15);
+        }
+
+        /* Pill Badges for Statuses */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border-radius: 9999px;
+            text-transform: uppercase;
+            letter-spacing: 0.2px;
+        }
+        .badge-sourced { background-color: #F3F4F6; color: #4B5563; }
+        .badge-contacted { background-color: #E0E7FF; color: #4338CA; }
+        .badge-demo { background-color: #DBEAFE; color: #1E40AF; }
+        .badge-proposal { background-color: #FEF3C7; color: #92400E; }
+        .badge-negotiating { background-color: #FFF3CD; color: #856404; font-weight: 700; }
+        .badge-won { background-color: #D1FAE5; color: #065F46; font-weight: 700; border: 1px solid #A7F3D0; }
+        .badge-lost { background-color: #FEE2E2; color: #991B1B; border: 1px solid #FECACA; }
+
+        /* Follow-up Badges */
+        .badge-fu-active { background-color: #ECFDF5; color: #047857; font-weight: 600; }
+        .badge-fu-none { background-color: #F3F4F6; color: #6B7280; }
+        .badge-fu-cadence { background-color: #FEF3C7; color: #D97706; }
+
+        /* Double-pane Layout for Analytics & SOP */
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 1.5rem;
+        }
+        @media (max-width: 1100px) {
+            .analytics-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        .dashboard-card {
+            background: var(--bg-card);
+            border-radius: var(--border-radius-lg);
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-sm);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+        .card-title h3 {
+            font-size: 1.15rem;
+            color: var(--secondary);
+        }
+        .card-title p {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        
+        /* SOP Content Styles */
+        .sop-timeline {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+            position: relative;
+            padding-left: 20px;
+        }
+        .sop-timeline::before {
+            content: '';
+            position: absolute;
+            left: 5px;
+            top: 0;
+            width: 2px;
+            height: 100%;
+            background-color: var(--border-color);
+        }
+        .timeline-step {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .timeline-step::before {
+            content: '';
+            position: absolute;
+            left: -20px;
+            top: 4px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: var(--secondary);
+            border: 3px solid #FFFFFF;
+            box-shadow: 0 0 0 2px var(--secondary-light);
+        }
+        .timeline-step.active::before {
+            background-color: var(--primary);
+            box-shadow: 0 0 0 2px var(--primary-light);
+        }
+        .step-day {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-transform: uppercase;
+        }
+        .step-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+        .step-desc {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        /* Copy Mail Card Component */
+        .mail-interpolator {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+        .selector-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        .textarea-preview {
+            width: 100%;
+            height: 250px;
+            padding: 14px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-md);
+            resize: none;
+            background-color: #FAF8F8;
+            color: var(--text-dark);
+            outline: none;
+            transition: var(--transition);
+        }
+        .textarea-preview:focus {
+            border-color: var(--primary);
+            background-color: #FFFFFF;
+        }
+
+        /* Slide-over Drawer / Modal */
+        .drawer-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(10, 20, 28, 0.4);
+            backdrop-filter: blur(4px);
+            z-index: 500;
+            display: none;
+            justify-content: flex-end;
+            animation: fadeInOverlay 0.25s ease;
+        }
+        .drawer {
+            width: 500px;
+            background-color: #FFFFFF;
+            height: 100%;
+            box-shadow: -10px 0 30px rgba(0,0,0,0.15);
+            display: flex;
+            flex-direction: column;
+            padding: 2.5rem 2rem;
+            gap: 1.5rem;
+            animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            overflow-y: auto;
+        }
+        @keyframes fadeInOverlay {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideIn {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+        .drawer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1rem;
+        }
+        .drawer-header h3 {
+            font-size: 1.3rem;
+            color: var(--primary);
+        }
+        .close-btn {
+            font-size: 1.5rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-muted);
+            transition: var(--transition);
+        }
+        .close-btn:hover {
+            color: var(--primary);
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .form-group label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+        .form-input {
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-sm);
+            font-family: inherit;
+            font-size: 0.9rem;
+            outline: none;
+            transition: var(--transition);
+        }
+        .form-input:focus {
+            border-color: var(--secondary);
+            box-shadow: 0 0 0 3px rgba(42, 98, 143, 0.1);
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        .form-actions {
+            margin-top: 1rem;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        
+        /* Objection Cards */
+        .objection-card {
+            background-color: #FFFFFF;
+            border-left: 4px solid var(--primary);
+            border-radius: var(--border-radius-md);
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            border-top: 1px solid var(--border-color);
+            border-right: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color);
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition);
+        }
+        .objection-card:hover {
+            transform: translateX(4px);
+            box-shadow: var(--shadow-md);
+        }
+        .objection-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 6px;
+        }
+        .objection-strategy {
+            font-size: 0.85rem;
+            color: var(--text-dark);
+            line-height: 1.5;
+        }
+
+        /* Bulk Uploader Box */
+        .uploader-box {
+            border: 2px dashed #CBD5E1;
+            padding: 1.5rem;
+            border-radius: var(--border-radius-md);
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            background-color: #F8FAFC;
+        }
+        .uploader-box:hover {
+            border-color: var(--secondary);
+            background-color: var(--secondary-light);
+        }
+        .uploader-icon {
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+            color: var(--secondary);
+        }
+        .uploader-text {
+            font-size: 0.85rem;
+            color: var(--text-dark);
+            font-weight: 500;
+        }
+        .uploader-subtext {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        /* ==================================================== */
+        /* PREMIUM LOGIN CONTAINER STYLES (NEW) */
+        /* ==================================================== */
+        .login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(135deg, #1E0606 0%, #0A141C 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 1.5rem;
+        }
+        .login-card {
+            width: 100%;
+            max-width: 420px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 2.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            color: #FFFFFF;
+            animation: fadeIn 0.4s ease;
+        }
+        .login-brand {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            margin-bottom: 0.5rem;
+        }
+        .login-logo {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2rem;
+            font-weight: 800;
+            color: #FFFFFF;
+            letter-spacing: 1px;
+        }
+        .login-logo span {
+            color: #FF5A5A;
+        }
+        .login-subtitle {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-top: 4px;
+        }
+        .login-welcome {
+            text-align: center;
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.75);
+            margin-bottom: 0.5rem;
+        }
+        .login-input {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: var(--border-radius-md);
+            color: #FFFFFF;
+            font-family: inherit;
+            font-size: 0.95rem;
+            outline: none;
+            transition: var(--transition);
+        }
+        .login-input:focus {
+            border-color: #FF5A5A;
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 0 0 3px rgba(255, 90, 90, 0.2);
+        }
+        .login-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(90deg, var(--primary) 0%, var(--secondary) 100%);
+            border: none;
+            color: #FFFFFF;
+            font-weight: 700;
+            font-size: 0.95rem;
+            border-radius: var(--border-radius-md);
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 0.5rem;
+            box-shadow: 0 4px 15px rgba(140, 29, 29, 0.4);
+        }
+        .login-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(140, 29, 29, 0.5);
+        }
+        .login-error {
+            color: #F87171;
+            font-size: 0.8rem;
+            font-weight: 500;
+            text-align: center;
+            background-color: rgba(248, 113, 113, 0.1);
+            border: 1px solid rgba(248, 113, 113, 0.2);
+            padding: 8px 12px;
+            border-radius: var(--border-radius-sm);
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 1. LOGIN OVERLAY SCREEN -->
+    <div id="login-overlay" class="login-overlay">
+        <form class="login-card" onsubmit="handleLogin(event)">
+            <div class="login-brand">
+                <div class="login-logo">Zencora<span>.</span></div>
+                <div class="login-subtitle">HEALTH SOLUTIONS</div>
+            </div>
+            
+            <p class="login-welcome">Enter your BDE credentials or Admin login to access the Lead Tracker.</p>
+            
+            <div class="login-error" id="login-error-message">Invalid credentials.</div>
+            
+            <div class="form-group">
+                <label style="color: rgba(255,255,255,0.7); font-size:0.8rem">Username</label>
+                <input type="text" id="login-username" class="login-input" required placeholder="e.g. john_doe" autofocus autocomplete="username">
+            </div>
+
+            <div class="form-group" style="margin-bottom: 0.5rem;">
+                <label style="color: rgba(255,255,255,0.7); font-size:0.8rem">Password</label>
+                <input type="password" id="login-password" class="login-input" required placeholder="••••••••" autocomplete="current-password">
+            </div>
+
+            <button type="submit" class="login-btn">
+                Authenticate Securely
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 15V17M12 9V11M8 11H16V18H8V11ZM10 11V7C10 5.89543 10.8954 5 12 5C13.1046 5 14 5.89543 14 7V11"/></svg>
+            </button>
+        </form>
+    </div>
+
+    <!-- 2. MAIN APPLICATION WORKSPACE -->
+    <div class="app-container" id="app-workspace">
+        
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <h1 class="sidebar-logo">Zencora<span>.</span></h1>
+                <span class="sidebar-subtitle">HEALTH SOLUTIONS</span>
+            </div>
+            
+            <!-- User Status Profile Card -->
+            <div class="user-profile-badge" style="justify-content: space-between;">
+                <div style="display: flex; align-items: center; gap: 10px; overflow: hidden;">
+                    <div class="avatar-circle" id="user-avatar">-</div>
+                    <div class="user-meta">
+                        <span class="user-meta-name" id="user-display-name">Loading...</span>
+                        <span class="user-meta-role" id="user-role-badge">BDE</span>
+                    </div>
+                </div>
+                <button type="button" title="Change Password" onclick="openPasswordDrawer()" style="background:none; border:none; color:rgba(255,255,255,0.6); cursor:pointer; padding:4px; font-size:1.1rem; transition:var(--transition);" onmouseover="this.style.color='#FFFFFF'" onmouseout="this.style.color='rgba(255,255,255,0.6)'">
+                    🔑
+                </button>
+            </div>
+            
+            <ul class="nav-list">
+                <li class="nav-item active" onclick="switchView('view-spreadsheet', this)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h18v18H3zM21 9H3M21 15H3M12 3v18"/></svg>
+                    Lead Spreadsheet
+                </li>
+                <li class="nav-item" onclick="switchView('view-analytics', this)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+                    Analytics & Charts
+                </li>
+                <li class="nav-item" onclick="switchView('view-sop', this)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
+                    SOP & Objections
+                </li>
+                <!-- Admin-Only Tab -->
+                <li class="nav-item" id="nav-users" style="display:none" onclick="switchView('view-users', this)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    BDE Registries
+                </li>
+            </ul>
+            
+            <div class="sidebar-footer">
+                <button class="sync-btn" onclick="syncAndDownloadExcel()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                    Export Styled Excel
+                </button>
+                <button class="logout-btn" onclick="openPasswordDrawer()" style="border-color: rgba(255, 255, 255, 0.2);">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-2-2l2 2M3 11v-1a8 8 0 0 1 15.66-2.31M15.5 15.5l5.5 5.5m0 0l-2.5-2.5m2.5 2.5l2.5-2.5"/><circle cx="7.5" cy="15.5" r="4.5"/></svg>
+                    Change Password
+                </button>
+                <button class="logout-btn" onclick="handleLogout()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+                    Logout Session
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Window -->
+        <main class="main-content">
+            
+            <!-- Global Header -->
+            <header class="content-header">
+                <div class="header-title">
+                    <h2 id="header-panel-title">BDE Lead Tracker Database</h2>
+                    <p id="header-panel-desc">Real-time collaborative workspace for Zencora's Business Development Executives.</p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-secondary" id="btn-bulk-import" onclick="openBulkImport()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+                        Bulk Import
+                    </button>
+                    <button class="btn btn-primary" onclick="openNewLeadDrawer()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        Add New Lead
+                    </button>
+                </div>
+            </header>
+
+            <!-- STATS QUICK VIEW -->
+            <section class="stats-grid">
+                <div class="stat-card accent">
+                    <div class="stat-label">Total Pipeline Value</div>
+                    <div class="stat-value" id="stat-pipeline">$0</div>
+                    <div class="stat-desc">Est. monthly value of active leads</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Active Prospects</div>
+                    <div class="stat-value" id="stat-active">0</div>
+                    <div class="stat-desc">Leads in outreach or negotiation</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Closed-Won (July)</div>
+                    <div class="stat-value" id="stat-won">0</div>
+                    <div class="stat-desc">Prospects onboarded this month</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Win Rate %</div>
+                    <div class="stat-value" id="stat-winrate">0.0%</div>
+                    <div class="stat-desc">Won leads vs total resolved leads</div>
+                </div>
+            </section>
+
+
+            <!-- PANEL 1: SPREADSHEET VIEW -->
+            <div id="view-spreadsheet" class="view-panel active">
+                
+                <div class="leads-section">
+                    <div class="leads-toolbar">
+                        <div class="search-filter-box">
+                            <input type="text" id="search-query" class="input-search" placeholder="Search Clinic, Contact, or EHR..." oninput="filterLeads()" autocomplete="off" spellcheck="false">
+                            
+                            <select id="filter-stage" class="select-filter" onchange="filterLeads()">
+                                <option value="">All Lead Stages</option>
+                                <option value="Sourced">Sourced</option>
+                                <option value="Contacted">Contacted</option>
+                                <option value="Discovery Scheduled">Discovery Scheduled</option>
+                                <option value="Proposal Sent">Proposal Sent</option>
+                                <option value="Negotiating">Negotiating</option>
+                                <option value="Closed-Won">Closed-Won</option>
+                                <option value="Closed-Lost">Closed-Lost</option>
+                            </select>
+
+                            <!-- BDE filter (Hidden for BDEs, Admin Only) -->
+                            <select id="filter-bde" class="select-filter" onchange="filterLeads()">
+                                <option value="">All BDEs</option>
+                            </select>
+
+                            <select id="filter-channel" class="select-filter" onchange="filterLeads()">
+                                <option value="">All Channels</option>
+                                <option value="Email">Email</option>
+                                <option value="LinkedIn">LinkedIn</option>
+                                <option value="Cold Call">Cold Call</option>
+                            </select>
+                        </div>
+                        
+                        <div style="font-size: 0.85rem; color: var(--text-muted)">
+                            <span id="filtered-count">0</span> of <span id="total-count">0</span> leads showing
+                        </div>
+                    </div>
+
+                    <div class="table-wrapper">
+                        <table class="leads-table" id="leads-table">
+                            <thead>
+                                <tr>
+                                    <th>Lead ID</th>
+                                    <th>Practice/Clinic Name</th>
+                                    <th>Specialty</th>
+                                    <th>Contact Name</th>
+                                    <th>Title</th>
+                                    <th>Email</th>
+                                    <th>Phone</th>
+                                    <th>EHR System</th>
+                                    <th>Stage</th>
+                                    <th>Follow-up Status</th>
+                                    <th>Value (Mo)</th>
+                                    <th>BDE</th>
+                                    <th>Last Touch</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="leads-tbody">
+                                <!-- Dynamic rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PANEL 2: ANALYTICS VIEW -->
+            <div id="view-analytics" class="view-panel">
+                <div class="analytics-grid">
+                    
+                    <!-- Chart card -->
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <div class="card-title">
+                                <h3>Lead Stages Distribution</h3>
+                                <p>Volume of leads segmented by active pipeline steps</p>
+                            </div>
+                        </div>
+                        <div style="height: 350px; position: relative;">
+                            <canvas id="chart-stages"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Pipeline Value Chart -->
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <div class="card-title">
+                                <h3>Revenue Pipeline Value ($)</h3>
+                                <p>Estimated monthly value of contracts per stage</p>
+                            </div>
+                        </div>
+                        <div style="height: 350px; position: relative;">
+                            <canvas id="chart-values"></canvas>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="analytics-grid">
+                    <!-- BDE Table Card -->
+                    <div class="dashboard-card" id="card-bde-performance">
+                        <div class="card-header">
+                            <div class="card-title">
+                                <h3>BDE Performance Metrics</h3>
+                                <p>Summary of active listings, conversions, and estimated values by owner</p>
+                            </div>
+                        </div>
+                        <div class="table-wrapper">
+                            <table class="leads-table">
+                                <thead>
+                                    <tr>
+                                        <th>BDE Executive</th>
+                                        <th style="text-align:center">Leads Managed</th>
+                                        <th style="text-align:center">Closed-Won</th>
+                                        <th style="text-align:right">Win Rate %</th>
+                                        <th style="text-align:right">Revenue Won (Mo)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="bde-metrics-tbody">
+                                    <!-- Dynamic BDE performance records -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- EHR stats card -->
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <div class="card-title">
+                                <h3>Top EHR / Practice Systems</h3>
+                                <p>Top electronic platforms target clinics are running (helps focus pitches)</p>
+                            </div>
+                        </div>
+                        <div class="table-wrapper">
+                            <table class="leads-table">
+                                <thead>
+                                    <tr>
+                                        <th>EHR Platform Name</th>
+                                        <th style="text-align:center">Prospect Count</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="ehr-metrics-tbody">
+                                    <!-- Dynamic EHR statistics -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PANEL 3: SOP & OBJECTION REFERENCE -->
+            <div id="view-sop" class="view-panel">
+                
+                <div class="analytics-grid">
+                    <!-- Outreach Cadence Card -->
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <div class="card-title">
+                                <h3>BDE Standard Outreach Cadence</h3>
+                                <p>Outbound touchpoint schedule to maximize conversion while preventing spam flags</p>
+                            </div>
+                        </div>
+                        
+                        <div class="sop-timeline">
+                            <div class="timeline-step active">
+                                <span class="step-day">Day 1</span>
+                                <span class="step-title">Initial Outbound Pitch</span>
+                                <span class="step-desc">Deliver the primary corporate pitch introducing Zencora's services (RCM or certified Virtual Assistants). Keep it highly professional and secure.</span>
+                            </div>
+                            <div class="timeline-step">
+                                <span class="step-day">Day 4</span>
+                                <span class="step-title">Follow-up 1 (3-day gap)</span>
+                                <span class="step-desc">Reply in thread. A brief, polite nudge referencing the initial email and checking if they had time to review the value metrics.</span>
+                            </div>
+                            <div class="timeline-step">
+                                <span class="step-day">Day 9</span>
+                                <span class="step-title">Follow-up 2 (5-day gap)</span>
+                                <span class="step-desc">Send secondary value pitch. Attach the official Zencora Company Brochure. Emphasize target metrics: >98% claim acceptance, 50% admin cost savings.</span>
+                            </div>
+                            <div class="timeline-step">
+                                <span class="step-day">Day 15</span>
+                                <span class="step-title">Final Breakup check-in (6-day gap)</span>
+                                <span class="step-desc">State that this is your final email. Politely say you understand they are busy. Leave your direct calendar scheduling link in case they want to connect later.</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Email Composer Card -->
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <div class="card-title">
+                                <h3>Dynamic Outreach Mail Composer</h3>
+                                <p>Select specialty/service and optional prospect lead to auto-generate ready-to-copy email templates</p>
+                            </div>
+                        </div>
+                        
+                        <div class="mail-interpolator">
+                            <div class="selector-row">
+                                <div class="form-group">
+                                    <label for="compose-specialty-select">Specialty / Service Focus</label>
+                                    <select id="compose-specialty-select" class="select-filter" style="width: 100%;" onchange="interpolateEmail()">
+                                        <option value="rcm_general">General RCM Service (Universal RCM Optimization)</option>
+                                        <option value="cardiology">Cardiology Billing & RCM</option>
+                                        <option value="orthopedics">Orthopedics Billing & RCM</option>
+                                        <option value="pediatrics">Pediatrics Billing & RCM</option>
+                                        <option value="internal_medicine">Internal Medicine & Family Practice</option>
+                                        <option value="radiology">Radiology & Diagnostic Imaging</option>
+                                        <option value="gastroenterology">Gastroenterology RCM</option>
+                                        <option value="dermatology">Dermatology & Surgery</option>
+                                        <option value="psychiatry">Psychiatry & Behavioral Health</option>
+                                        <option value="neurology">Neurology & Pain Management</option>
+                                        <option value="urgent_care">Urgent Care & Emergency Medicine</option>
+                                        <option value="physical_therapy">Physical Therapy & Rehabilitation</option>
+                                        <option value="dental">Dental & Oral Surgery</option>
+                                        <option value="podiatry">Podiatry & Wound Care</option>
+                                        <option value="va">Virtual Clinical Assistant</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="compose-lead-select">Prospect Lead (Optional)</label>
+                                    <select id="compose-lead-select" class="select-filter" style="width: 100%;" onchange="onLeadSelectChange()">
+                                        <option value="">-- Standalone / Custom (No Lead Selected) --</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <textarea id="compose-textarea" class="textarea-preview" readonly></textarea>
+                            
+                            <button class="btn btn-primary" style="justify-content: center;" onclick="copyComposedEmail()">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
+                                Copy Email Text
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Objection Handling section -->
+                <div class="dashboard-card" style="width: 100%;">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <h3>BDE Common Objection Matrix</h3>
+                            <p>Proven response scripts addressing pricing, security, transition, and remote work structures</p>
+                        </div>
+                    </div>
+                    
+                    <div id="objections-container">
+                        <!-- Rendered by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- PANEL 4: USER REGISTRIES (NEW - ADMIN ONLY) -->
+            <div id="view-users" class="view-panel">
+                <div class="analytics-grid">
+                    <!-- User Registry List -->
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <div class="card-title">
+                                <h3>Active Business Development Executives</h3>
+                                <p>Configured BDE logins and account statuses. Inactive accounts are blocked from accessing the system.</p>
+                            </div>
+                        </div>
+                        <div class="table-wrapper">
+                            <table class="leads-table">
+                                <thead>
+                                    <tr>
+                                        <th>Username</th>
+                                        <th>BDE Display Name</th>
+                                        <th>Role Authority</th>
+                                        <th>Account Status</th>
+                                        <th style="text-align:center">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="users-tbody">
+                                    <!-- Populated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Create User Form -->
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <div class="card-title">
+                                <h3>Register New BDE Executive</h3>
+                                <p>Creates secure credentials allowing the BDE to login and manage isolated leads.</p>
+                            </div>
+                        </div>
+                        <form id="create-user-form" onsubmit="handleCreateUser(event)" style="display: flex; flex-direction: column; gap: 1.25rem;" autocomplete="off">
+                            <div class="form-group">
+                                <label for="new-display-name">BDE Full Display Name *</label>
+                                <input type="text" id="new-display-name" class="form-input" required placeholder="e.g. Sarah Connor" autocomplete="off" spellcheck="false">
+                            </div>
+                            <div class="form-group">
+                                <label for="new-username">Username *</label>
+                                <input type="text" id="new-username" class="form-input" required placeholder="e.g. sarah_c" autocomplete="off" spellcheck="false">
+                            </div>
+                            <div class="form-group">
+                                <label for="new-password">Password *</label>
+                                <input type="password" id="new-password" class="form-input" required placeholder="Password" autocomplete="off" spellcheck="false">
+                            </div>
+                            <button type="submit" class="btn btn-primary" style="justify-content: center;">
+                                Create BDE Credentials
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+        
+    </div>
+
+    <!-- ADD/EDIT LEAD DRAWER -->
+    <div id="lead-drawer" class="drawer-overlay" onclick="closeLeadDrawer(event)">
+        <div class="drawer" onclick="event.stopPropagation()">
+            <div class="drawer-header">
+                <h3 id="drawer-title">Add New Prospect Lead</h3>
+                <button class="close-btn" onclick="hideLeadDrawer()">&times;</button>
+            </div>
+            
+            <form id="lead-form" onsubmit="saveLead(event)" autocomplete="off">
+                <input type="hidden" id="lead-index" value="-1">
+                <input type="hidden" id="lead-id" value="">
+                
+                <div class="form-group">
+                    <label for="form-name">Practice / Clinic Name *</label>
+                    <input type="text" id="form-name" class="form-input" required placeholder="e.g. Metro Pediatrics" autocomplete="off" spellcheck="false">
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="form-specialty">Specialty</label>
+                        <input type="text" id="form-specialty" class="form-input" placeholder="e.g. Pediatrics, Cardiology" autocomplete="off" spellcheck="false">
+                    </div>
+                    <div class="form-group">
+                        <label for="form-ehr">EHR / PMS System</label>
+                        <input type="text" id="form-ehr" class="form-input" placeholder="e.g. eClinicalWorks, Epic" autocomplete="off" spellcheck="false">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="form-contact">Contact Name</label>
+                        <input type="text" id="form-contact" class="form-input" placeholder="e.g. Dr. Jenkins" autocomplete="off" spellcheck="false">
+                    </div>
+                    <div class="form-group">
+                        <label for="form-title">Contact Title</label>
+                        <input type="text" id="form-title" class="form-input" placeholder="e.g. Owner, Practice Manager" autocomplete="off" spellcheck="false">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="form-email">Email Address</label>
+                        <input type="email" id="form-email" class="form-input" placeholder="e.g. doctor@clinic.com" autocomplete="off" spellcheck="false">
+                    </div>
+                    <div class="form-group">
+                        <label for="form-phone">Phone Number</label>
+                        <input type="text" id="form-phone" class="form-input" placeholder="e.g. 555-0123" autocomplete="off" spellcheck="false">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="form-channel">Outreach Channel</label>
+                        <select id="form-channel" class="form-input">
+                            <option value="Email">Email</option>
+                            <option value="LinkedIn">LinkedIn</option>
+                            <option value="Cold Call">Cold Call</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="form-bde-group">
+                        <label for="form-bde">Assigned BDE *</label>
+                        <input type="text" id="form-bde" class="form-input" required placeholder="e.g. John Doe" autocomplete="off" spellcheck="false">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="form-stage">Lead Stage *</label>
+                        <select id="form-stage" class="form-input" required>
+                            <option value="Sourced">Sourced</option>
+                            <option value="Contacted">Contacted</option>
+                            <option value="Discovery Scheduled">Discovery Scheduled</option>
+                            <option value="Proposal Sent">Proposal Sent</option>
+                            <option value="Negotiating">Negotiating</option>
+                            <option value="Closed-Won">Closed-Won</option>
+                            <option value="Closed-Lost">Closed-Lost</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="form-value">Est. Monthly Value ($) *</label>
+                        <input type="number" id="form-value" class="form-input" required min="0" value="0" autocomplete="off">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="form-followup">Follow-up status</label>
+                        <select id="form-followup" class="form-input">
+                            <option value="Day 1 - Sent">Day 1 - Sent</option>
+                            <option value="Day 4 - Follow-up 1">Day 4 - Follow-up 1</option>
+                            <option value="Day 9 - Follow-up 2">Day 9 - Follow-up 2</option>
+                            <option value="Day 15 - Final">Day 15 - Final</option>
+                            <option value="Active Conversation">Active Conversation</option>
+                            <option value="No Response">No Response</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="form-nextaction">Next Action Date</label>
+                        <input type="date" id="form-nextaction" class="form-input" autocomplete="off">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="form-notes">Next Steps & Notes</label>
+                    <input type="text" id="form-notes" class="form-input" placeholder="e.g. Spoke on phone, sending RCM terms." autocomplete="off" spellcheck="false">
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="hideLeadDrawer()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Prospect</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- BULK IMPORT MODAL -->
+    <div id="import-drawer" class="drawer-overlay" onclick="closeImportDrawer(event)">
+        <div class="drawer" onclick="event.stopPropagation()" style="width: 450px;">
+            <div class="drawer-header">
+                <h3>Bulk Lead Importer</h3>
+                <button class="close-btn" onclick="hideImportDrawer()">&times;</button>
+            </div>
+            
+            <div style="display: flex; flex-direction: column; gap: 1.5rem; margin-top: 1rem;">
+                <p style="font-size: 0.85rem; color: var(--text-dark); line-height: 1.5;">
+                    Import prospects in bulk via a standard <strong>CSV</strong> or <strong>JSON</strong> file. 
+                    The importer maps columns like <em>name, specialty, contactName, contactEmail, estValue, assignedBde, leadStage</em> automatically.
+                </p>
+                
+                <div class="uploader-box" onclick="triggerFileSelect()">
+                    <div class="uploader-icon">📥</div>
+                    <div class="uploader-text">Click or drag & drop CSV or JSON file here</div>
+                    <div class="uploader-subtext">Supports files exported from CRMs or Excel templates</div>
+                    <input type="file" id="file-uploader" style="display: none;" accept=".csv,.json" onchange="handleFileUpload(event)">
+                </div>
+
+                <div style="border-top: 1px solid var(--border-color); padding-top: 1.25rem;">
+                    <h4 style="font-size: 0.85rem; color: var(--text-dark); margin-bottom: 6px;">CSV Header Format Guide:</h4>
+                    <code style="font-size: 0.75rem; background-color: #F1F5F9; padding: 8px 12px; display: block; border-radius: var(--border-radius-sm); border: 1px solid var(--border-color); word-break: break-all;">
+                        name, specialty, contactName, contactEmail, estValue, assignedBde, leadStage
+                    </code>
+                </div>
+                
+                <div class="form-actions">
+                    <button class="btn btn-secondary" style="width: 100%; justify-content: center;" onclick="hideImportDrawer()">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CHANGE PASSWORD MODAL -->
+    <div id="password-drawer" class="drawer-overlay" onclick="closePasswordDrawer(event)">
+        <div class="drawer" onclick="event.stopPropagation()" style="width: 450px;">
+            <div class="drawer-header">
+                <h3>Change Your Password</h3>
+                <button class="close-btn" onclick="hidePasswordDrawer()">&times;</button>
+            </div>
+            
+            <form id="change-password-form" onsubmit="handleChangePassword(event)" style="display: flex; flex-direction: column; gap: 1.25rem; margin-top: 1rem;" autocomplete="off">
+                <div class="form-group">
+                    <label for="pwd-current">Current Password *</label>
+                    <input type="password" id="pwd-current" class="form-input" required placeholder="Enter current password" autocomplete="off" spellcheck="false">
+                </div>
+                <div class="form-group">
+                    <label for="pwd-new">New Password *</label>
+                    <input type="password" id="pwd-new" class="form-input" required placeholder="Enter new password" autocomplete="off" spellcheck="false">
+                </div>
+                <div class="form-group">
+                    <label for="pwd-confirm">Confirm New Password *</label>
+                    <input type="password" id="pwd-confirm" class="form-input" required placeholder="Confirm new password" autocomplete="off" spellcheck="false">
+                </div>
+                
+                <div id="pwd-error-msg" style="display:none; color:#E74C3C; font-size:0.85rem; font-weight:600; background-color:#FADBD8; padding:8px 12px; border-radius:4px;"></div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="hidePasswordDrawer()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Password</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // Global variables
+        let leads = [];
+        let users = [];
+        let activeTab = 'view-spreadsheet';
+        let charts = {};
+        
+        // Session profile
+        let currentSession = null;
+
+        // Objection Handler Matrix Data
+        const objectionsData = [
+            {
+                title: "Pricing: 'Your rate seems high compared to basic offshore freelancers.'",
+                strategy: "Explain that Zencora is a managed agency structure. We employ AAPC-certified billing coders, maintain double-pass QA checks on claims, guarantee HIPAA protection, and offer a dedicated onshore account manager to audit client queries. Offshore contractors run unmonitored; a single coding mistake resulting in a denial costs clinics hundreds of dollars in lost cash flows, easily offsetting freelancer savings."
+            },
+            {
+                title: "Security: 'We are hesitant to share administrative access and patient PHI.'",
+                strategy: "Assure them Zencora connects directly into the provider's active EHR/PMS system (using dedicated client-controlled logins). We do not scrape, host, download, or duplicate health records locally on client endpoints. Our logins are strictly logged and auditable, and credentials can be instantly revoked by the clinic admin. Our team is fully trained and certified in HIPAA compliance."
+            },
+            {
+                title: "System transition: 'Changing billers will disrupt our cash flow during setup.'",
+                strategy: "Detail our zero-downtime transition workflow. We don't take down their existing billing lines immediately. Instead, we run a dual track where our team starts by auditing and resolving old Accounts Receivable (A/R) backlogs first, demonstrating our speed and claim validation. We only switch primary active billing flows once all system credentials, clearinghouses, and claim portals are confirmed functional."
+            },
+            {
+                title: "Remote structure: 'We prefer in-office billers who are physically present.'",
+                strategy: "Highlight the margin savings of our remote structure. Outsource billing eliminates in-office desk space cost, hardware allocations, EHR billing software license costs, employee benefits, and local payroll taxes. We coordinate daily with clinic managers via Teams/Slack, delivering detailed daily logs of claims submitted, denials investigated, and cash cleared, providing more visibility than a typical desk employee."
+            }
+        ];
+
+        // Email Templates Data
+        const emailTemplates = {
+            rcm_general: `Subject: Accelerating Practice Revenue: 98%+ Clean Claim Rate for {PracticeName}
+
+Dear Dr. {LastName} / Practice Administrator,
+
+I hope this email finds you well.
+
+I am writing to you on behalf of Zencora Health Solutions. We specialize in partnering with healthcare practices to optimize their Revenue Cycle Management (RCM), minimize claim denials, and accelerate reimbursement cycles.
+
+In working with medical practices similar to {PracticeName}, we consistently deliver:
+* A clean-claim submission rate exceeding 98%
+* Average denial reductions of 15% to 25% within the first 90 days
+* Transparent, real-time billing tracking with HIPAA-compliant processes
+* End-to-end clearinghouse management and aging A/R recovery
+
+Our team of certified medical billers and coders handles the complete RCM workflow, allowing your clinical staff to focus entirely on patient care.
+
+Would you be open to a brief, 10-minute discovery call next Tuesday at 10:00 AM or Thursday at 2:00 PM EST to discuss how we can improve your cash flow? Alternatively, you can view our website at www.zencorahs.com to learn more about our operational model.
+
+Thank you for your time, and I look forward to your response.
+
+Sincerely,
+
+{BdeName}
+Business Development Executive
+Zencora Health Solutions
+info@zencorahs.com | www.zencorahs.com`,
+
+            cardiology: `Subject: Cardiology RCM Optimization: Reducing Denials & Prior-Auth Delays for {PracticeName}
+
+Dear Dr. {LastName} / Practice Manager,
+
+Managing complex cardiology coding—including diagnostic echocardiograms, nuclear stress tests, cardiac catheterizations, and Modifier 25/59 utilization—requires specialized billing expertise.
+
+At Zencora Health Solutions, our certified cardiology coders specialize in optimizing revenue for cardiovascular groups.
+
+Key metrics we achieve for cardiology practices like {PracticeName}:
+* 98.4% First-Pass Clean Claim Acceptance Rate
+* Accelerated Prior-Authorization turnaround for Angiograms & Stent procedures
+* 20% Reduction in Days in A/R (average reduction to under 30 days)
+* Complete audit trail compliance for E/M and diagnostic procedure coding
+
+We would welcome the opportunity to benchmark {PracticeName}'s current billing performance with a zero-cost 15-minute audit call.
+
+Are you available for a brief conversation this week?
+
+Best regards,
+
+{BdeName}
+Business Development Executive
+Zencora Health Solutions
+info@zencorahs.com | www.zencorahs.com`,
+
+            orthopedics: `Subject: Orthopedic Surgery RCM: Eliminating Billing Bottlenecks & DME Claim Loss for {PracticeName}
+
+Dear Dr. {LastName} / Orthopedic Practice Administrator,
+
+Orthopedic practices face severe revenue leakage due to complex multi-procedure surgical bundle rules, unbundling rejections, modifier errors (-50, -51, -59), and uncollected DME claims.
+
+Zencora Health Solutions provides specialized Orthopedic Revenue Cycle Management designed to protect your hard-earned surgical reimbursements:
+* Mastered surgical coding for arthroscopy, joint replacements, and spinal interventions
+* Seamless DME (Durable Medical Equipment) pre-authorization and reimbursement management
+* Dedicated denial management team auditing insurance bundling rules daily
+* >98% clean claim rate with transparent daily reimbursement reporting
+
+Let's schedule a 10-minute strategy call to discuss how Zencora can increase your net collection rate at {PracticeName}.
+
+Sincerely,
+
+{BdeName}
+Business Development Executive
+Zencora Health Solutions
+info@zencorahs.com | www.zencorahs.com`,
+
+            pediatrics: `Subject: Pediatrics Billing Excellence: Immunization Registries & Medicaid RCM for {PracticeName}
+
+Dear Dr. {LastName} / Practice Manager,
+
+Pediatric practices deal with unique billing challenges: vaccine administration coding (VFC program rules), preventive vs. problem-oriented well-child visit coding, and state Medicaid reimbursement complexities.
+
+Zencora Health Solutions supports pediatric practices with dedicated billing experts who ensure every well-child visit and vaccine administration is billed correctly:
+* Precise billing for immunization administration codes and combination vaccines
+* Seamless integration with state VFC (Vaccines for Children) tracking
+* Specialized handling of Medicaid and commercial pediatric payer rules
+* 50% reduction in administrative overhead for clinic staff
+
+We would love to share how we helped similar pediatric practices increase collections while reducing administrative burnout. Are you free for a 10-minute call next week?
+
+Warm regards,
+
+{BdeName}
+Business Development Executive
+Zencora Health Solutions
+info@zencorahs.com | www.zencorahs.com`,
+
+            internal_medicine: `Subject: Internal Medicine RCM: Maximizing CCM & Preventive Care Revenue for {PracticeName}
+
+Dear Dr. {LastName} / Practice Administrator,
+
+Primary care and internal medicine clinics often leave substantial reimbursement on the table by missing Chronic Care Management (CCM), Annual Wellness Visits (AWV), and complex E/M coding guidelines.
+
+Zencora Health Solutions partners with Internal Medicine practices to capture every legitimate dollar earned:
+* Comprehensive billing for Chronic Care Management (CPT 99490) and Remote Patient Monitoring
+* Expert coding for dual-service visits (Preventive + E/M with Modifier 25)
+* 98%+ Clean Claim Rate with 14-day average reimbursement turnaround
+* Complete end-to-end patient billing support and soft collections
+
+Could we schedule a brief 10-minute call to discuss how Zencora can streamline {PracticeName}'s cash flow?
+
+Best regards,
+
+{BdeName}
+Business Development Executive
+Zencora Health Solutions
+info@zencorahs.com | www.zencorahs.com`,
+
+            radiology: `Subject: Radiology RCM Solutions: Mastering PC/TC Split & Imaging Billing for {PracticeName}
+
+Dear Dr. {LastName} / Radiology Director,
+
+Radiology billing demands flawless execution of Professional Component (PC / Modifier 26) versus Technical Component (TC) splits, ordering provider documentation compliance, and subspecialty imaging coding (MRI, CT, PET, Ultrasound).
+
+Zencora Health Solutions delivers dedicated RCM services tailored to outpatient imaging centers and radiology groups:
+* Strict compliance with PC/TC split requirements across all major commercial and federal payers
+* Automated prior-auth validation prior to scan execution
+* 98.6% first-pass claim acceptance rate for diagnostic and interventional radiology
+* Daily claim submission and real-time denial tracking dashboards
+
+Would you be open to a 10-minute call next Tuesday or Thursday to review our radiology billing performance metrics?
+
+Sincerely,
+
+{BdeName}
+Business Development Executive
+Zencora Health Solutions
+info@zencorahs.com | www.zencorahs.com`,
+
+            gastroenterology: `Subject: Gastroenterology RCM: Endoscopy Screening vs. Diagnostic Coding for {PracticeName}
+
+Dear Dr. {LastName} / Practice Manager,
+
+Distinguishing between screening colonoscopies and diagnostic/therapeutic endoscopic procedures (with polyp removal or biopsies) is one of the highest denial risks in Gastroenterology billing.
+
+Zencora Health Solutions provides specialized GI billing expertise:
+* Flawless application of PT/33 modifiers and screening-to-diagnostic conversion coding
+* Pathology billing alignment and anesthesia charge capturing
+* Rapid appeal turnaround on colonoscopy pre-existing condition rejections
+* 15% to 25% increase in net collections within 90 days
+
+Let's connect for 10 minutes this week to explore how Zencora can elevate {PracticeName}'s billing efficiency.
+
+Best regards,
+
+{BdeName}
+Business Development Executive
+Zencora Health Solutions
+info@zencorahs.com | www.zencorahs.com`,
+
+            dermatology: `Subject: Dermatology RCM: Biopsy, Mohs Surgery & Cosmetic vs. Medical Billing for {PracticeName}
+
+Dear Dr. {LastName} / Dermatology Practice Manager,
+
+Dermatology practices navigate tight coding rules surrounding lesion destruction, Mohs micrographic surgery steps, pathology integration, and separating cosmetic from medically necessary treatments.
+
+Zencora Health Solutions delivers specialized RCM for dermatology practices:
+* Expert coding for Mohs surgery layers, repair codes, and complex excisions
+* Precise handling of destruction vs. excision CPT coding guidelines
+* Seamless patient payment portals for cosmetic/co-pay balances
+* >98% clean claim rate to ensure predictable cash flow for {PracticeName}
+
+Are you available for a brief discovery call this week?
+
+Sincerely,
+
+{BdeName}
+Business Development Executive
+Zencora Health Solutions
+info@zencorahs.com | www.zencorahs.com`,
+
+            psychiatry: `Subject: Behavioral Health RCM: Telehealth & Time-Based Psychotherapy Billing for {PracticeName}
+
+Dear Dr. {LastName} / Behavioral Health Director,
+
+Psychiatry and behavioral health providers face strict insurer scrutiny around time-based CPT codes (90834, 90837), psychiatric diagnostic evaluations, telehealth place of service modifiers, and mental health parity laws.
+
+Zencora Health Solutions supports psychiatric clinics with dedicated behavioral health billing solutions:
+* Expert billing for combined E/M + Psychotherapy add-on codes (90833, 90836, 90838)
+* Telehealth modifier optimization (GT, FQ, 95) and POS 10/02 compliance
+* Dedicated prior-authorization team for intensive outpatient (IOP) and specialized care
+* Soft patient billing communication that protects provider-patient trust
+
+Could we schedule a quick 10-minute check-in to discuss optimizing {PracticeName}'s RCM?
+
+Warm regards,
+
+{BdeName}
+Business Development Executive
+Zencora Health Solutions
+info@zencorahs.com | www.zencorahs.com`,
+
+            neurology: `Subject: Neurology & Pain Management RCM: Electrodiagnostic & Injection Billing for {PracticeName}
+
+Dear Dr. {LastName} / Practice Administrator,
+
+Interventional pain management and neurology practices lose significant revenue when nerve conduction studies (NCS/EMG), epidural steroid injections, and joint injections trigger unbundling denials or missing authorization holds.
+
+Zencora Health Solutions provides specialized Neurology and Pain Management billing:
+* Precise coding for fluoroscopic guidance, facet joint injections, and trigger point therapy
+* Proper documentation auditing for EMG/NCS unit billing compliance
+* Prior-authorization tracking for high-complexity interventional procedures
+* 98%+ Clean claim rate with active A/R follow-up every 7 days
+
+Let's arrange a brief 10-minute call next week to benchmark {PracticeName}'s current collections performance.
+
+Sincerely,
+
+{BdeName}
+Business Development Executive
+Zencora Health Solutions
+info@zencorahs.com | www.zencorahs.com`,
+
+            urgent_care: `Subject: Urgent Care RCM: High-Volume Rapid Claim Submissions for {PracticeName}
+
+Dear Dr. {LastName} / Urgent Care Managing Director,
+
+Urgent care centers rely on high-volume throughput and immediate claim turnarounds. Billing delays, uncollected front-desk copays, and incorrect triage E/M coding directly drain operating margins.
+
+Zencora Health Solutions offers high-speed Urgent Care Revenue Cycle Management:
+* Same-day claim scrub and electronic submission within 24 hours of patient visit
+* Precise coding for S-codes, walk-in E/M levels, minor procedures, and X-ray services
+* Integrated real-time eligibility verification to prevent unbilled walk-in rejections
+* 20%+ Increase in monthly cash collections for urgent care operators
+
+Are you free for a 10-minute call this week to review how Zencora can support {PracticeName}?
+
+Best regards,
+
+{BdeName}
+Business Development Executive
+Zencora Health Solutions
+info@zencorahs.com | www.zencorahs.com`,
+
+            physical_therapy: `Subject: Physical Therapy RCM: 8-Minute Rule, KX Modifiers & Therapy Cap Billing for {PracticeName}
+
+Dear Dr. {LastName} / Therapy Director,
+
+Physical and occupational therapy billing requires strict adherence to the CMS 8-minute rule, timed vs. untimed CPT units, KX modifier attestations, and plan-of-care physician re-certifications.
+
+Zencora Health Solutions delivers specialized Physical Therapy billing:
+* Automated calculation and verification of 8-minute rule unit thresholds
+* Timely application of KX modifiers and therapy cap exception tracking
+* Plan of Care (POC) tracking to eliminate non-certified treatment claim rejections
+* 98.2% First-pass clean claim submission rate
+
+We would be glad to share a 10-minute demo of our PT billing management for {PracticeName}. Are you available next week?
+
+Warm regards,
+
+{BdeName}
+Business Development Executive
+Zencora Health Solutions
+info@zencorahs.com | www.zencorahs.com`,
+
+            dental: `Subject: Dental & Oral Surgery Medical Cross-Coding RCM for {PracticeName}
+
+Dear Dr. {LastName} / Practice Manager,
+
+Did you know that many surgical dental procedures, sleep apnea appliances, TMJ treatments, and traumatic oral injuries can be cross-billed to medical insurance for higher provider reimbursement?
+
+Zencora Health Solutions specializes in Dental-to-Medical Cross-Coding and CDT/CPT alignment:
+* Seamless conversion of CDT dental procedures to CPT/ICD-10 medical claims
+* Unlocking medical insurance coverage for oral surgery, implants, and consultations
+* End-to-end clearinghouse management for both dental and medical payers
+* Up to 35% overall increase in practice revenue through medical billing channels
+
+Let's connect for 10 minutes to discuss how {PracticeName} can leverage medical billing for dental procedures.
+
+Sincerely,
+
+{BdeName}
+Business Development Executive
+Zencora Health Solutions
+info@zencorahs.com | www.zencorahs.com`,
+
+            podiatry: `Subject: Podiatry & Wound Care RCM: Debridement & Graft Prior-Auth Billing for {PracticeName}
+
+Dear Dr. {LastName} / Podiatry Practice Administrator,
+
+Podiatry practices regularly face denials concerning routine foot care exclusions, complex wound care debridement depth specifications, and skin substitute / graft prior-authorizations.
+
+Zencora Health Solutions brings targeted Podiatry and Wound Care RCM solutions:
+* Compliant coding for routine foot care systemic disease exceptions (Q-modifiers)
+* Accurate CPT assignment for surgical debridement, nail avulsions, and biomechanical orthotics
+* Strict prior-authorization workflows for bio-engineered skin grafts and wound dressings
+* 98%+ Clean Claim Rate with 14-day average reimbursement turnaround
+
+Could we schedule a 10-minute discovery call next week for {PracticeName}?
+
+Best regards,
+
+{BdeName}
+Business Development Executive
+Zencora Health Solutions
+info@zencorahs.com | www.zencorahs.com`,
+
+            va: `Subject: Reducing Clinical Burnout: Certified Virtual Assistants for {PracticeName}
+
+Dear Dr. {LastName} / Practice Manager,
+
+I hope you are having a productive week.
+
+Clinical administrative overhead consumes up to 15 hours per week for average healthcare providers. At Zencora Health Solutions, we solve this by providing dedicated, HIPAA-compliant Virtual Assistants (VAs) and Medical Transcribers who work directly inside your electronic systems.
+
+Our healthcare administrative professionals seamlessly manage:
+* Real-time charting, scribing, and document indexing
+* Patient scheduling, intake processing, and prior-authorization coordination
+* Patient billing support and collections communication
+
+Our services deliver up to 50% cost savings compared to in-house administrative staffing, while expanding your clinic's operational capacity.
+
+Are you available for a quick call this week to explore how we can support {PracticeName}? Please let me know your preference for a call date and time.
+
+Best regards,
+
+{BdeName}
+Business Development Executive
+Zencora Health Solutions
+info@zencorahs.com | www.zencorahs.com`
+        };
+
+        // Change Password Modal Actions
+        function openPasswordDrawer() {
+            document.getElementById('change-password-form').reset();
+            document.getElementById('pwd-error-msg').style.display = 'none';
+            document.getElementById('password-drawer').style.display = 'flex';
+        }
+
+        function hidePasswordDrawer() {
+            document.getElementById('password-drawer').style.display = 'none';
+        }
+
+        function closePasswordDrawer(e) {
+            if (e.target.id === 'password-drawer') hidePasswordDrawer();
+        }
+
+        async function handleChangePassword(event) {
+            event.preventDefault();
+            const currentPassword = document.getElementById('pwd-current').value.trim();
+            const newPassword = document.getElementById('pwd-new').value.trim();
+            const confirmPassword = document.getElementById('pwd-confirm').value.trim();
+            const errorMsg = document.getElementById('pwd-error-msg');
+
+            errorMsg.style.display = 'none';
+
+            if (newPassword !== confirmPassword) {
+                errorMsg.innerText = "New passwords do not match.";
+                errorMsg.style.display = 'block';
+                return;
+            }
+
+            if (newPassword.length < 4) {
+                errorMsg.innerText = "Password must be at least 4 characters.";
+                errorMsg.style.display = 'block';
+                return;
+            }
+
+            try {
+                const response = await fetchWithAuth('/api/change-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ currentPassword, newPassword })
+                });
+
+                if (response.ok) {
+                    alert("Password changed successfully!");
+                    hidePasswordDrawer();
+                } else {
+                    const errData = await response.json();
+                    errorMsg.innerText = errData.error || "Failed to update password.";
+                    errorMsg.style.display = 'block';
+                }
+            } catch (err) {
+                errorMsg.innerText = "Network error communicating with server.";
+                errorMsg.style.display = 'block';
+            }
+        }
+
+        // App Initializer
+        window.addEventListener('DOMContentLoaded', () => {
+            checkSession();
+        });
+
+        // ----------------------------------------------------
+        // AUTHENTICATION AND SESSION LOGIC (NEW)
+        // ----------------------------------------------------
+        function checkSession() {
+            const token = localStorage.getItem('zencora_token');
+            const username = localStorage.getItem('zencora_username');
+            const role = localStorage.getItem('zencora_role');
+            const displayName = localStorage.getItem('zencora_displayName');
+
+            if (token && username && role && displayName) {
+                currentSession = { token, username, role, displayName };
+                
+                // Show App Workspace, Hide Login
+                document.getElementById('login-overlay').style.display = 'none';
+                document.getElementById('app-workspace').style.display = 'block';
+                
+                // Populate profile card
+                document.getElementById('user-display-name').innerText = displayName;
+                document.getElementById('user-avatar').innerText = displayName.charAt(0);
+                const roleBadge = document.getElementById('user-role-badge');
+                roleBadge.innerText = role;
+                if (role === 'bde') {
+                    roleBadge.classList.add('role-bde');
+                } else {
+                    roleBadge.classList.remove('role-bde');
+                }
+
+                // Configure view constraints based on role
+                configureRoleBasedUI();
+
+                // Load initial data
+                loadLeads();
+                renderObjections();
+                setupEditableTableEvents();
+            } else {
+                // Show Login, Hide App
+                document.getElementById('login-overlay').style.display = 'flex';
+                document.getElementById('app-workspace').style.display = 'none';
+                currentSession = null;
+            }
+        }
+
+        // Configure layout constraints based on role (Admin vs BDE)
+        function configureRoleBasedUI() {
+            const isBde = currentSession.role === 'bde';
+            
+            // 1. Sidebar views
+            document.getElementById('nav-users').style.display = isBde ? 'none' : 'flex';
+            
+            // 2. Toolbar BDE Filters
+            document.getElementById('filter-bde').style.display = isBde ? 'none' : 'block';
+
+            // 3. New Lead Drawer BDE Field
+            const bdeGroup = document.getElementById('form-bde-group');
+            if (isBde) {
+                bdeGroup.style.display = 'none';
+                document.getElementById('form-bde').value = currentSession.displayName;
+            } else {
+                bdeGroup.style.display = 'flex';
+            }
+
+            // 4. Bulk import button - restrict or let both import? BDE can import, it gets auto-assigned.
+            // BDE performance card - hide for BDE if wanted, or let it show only their stats.
+            // The charts will dynamically calculate based on loaded data.
+        }
+
+        // Custom AJAX fetch wrapper adding auth token
+        async function fetchWithAuth(url, options = {}) {
+            if (!options.headers) {
+                options.headers = {};
+            }
+            if (currentSession && currentSession.token) {
+                options.headers['Authorization'] = `Bearer ${currentSession.token}`;
+            }
+
+            try {
+                const response = await fetch(url, options);
+                if (response.status === 401) {
+                    console.warn("Unauthorised response received. Session terminated.");
+                    handleLogout();
+                    throw new Error("Session expired.");
+                }
+                return response;
+            } catch (err) {
+                console.error("Fetch API error:", err);
+                throw err;
+            }
+        }
+
+        // Handle Login POST
+        async function handleLogin(event) {
+            event.preventDefault();
+            const usernameInput = document.getElementById('login-username').value;
+            const passwordInput = document.getElementById('login-password').value;
+            const errorMsg = document.getElementById('login-error-message');
+
+            errorMsg.style.display = 'none';
+
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: usernameInput, password: passwordInput })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    // Cache session details
+                    localStorage.setItem('zencora_token', data.token);
+                    localStorage.setItem('zencora_username', data.username);
+                    localStorage.setItem('zencora_role', data.role);
+                    localStorage.setItem('zencora_displayName', data.displayName);
+
+                    checkSession();
+                } else {
+                    const errData = await response.json();
+                    errorMsg.innerText = errData.error || "Authentication failed.";
+                    errorMsg.style.display = 'block';
+                }
+            } catch (err) {
+                errorMsg.innerText = "Connection error. Local server may be offline.";
+                errorMsg.style.display = 'block';
+            }
+        }
+
+        // Handle Logout POST
+        async function handleLogout() {
+            if (currentSession) {
+                try {
+                    // Fire-and-forget logout on server
+                    fetch('/api/logout', {
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${currentSession.token}` }
+                    });
+                } catch(e){}
+            }
+
+            // Clear cache
+            localStorage.removeItem('zencora_token');
+            localStorage.removeItem('zencora_username');
+            localStorage.removeItem('zencora_role');
+            localStorage.removeItem('zencora_displayName');
+
+            checkSession();
+        }
+
+        // ----------------------------------------------------
+        // ADMIN-ONLY BDE ACCOUNTS CREATOR LOGIC (NEW)
+        // ----------------------------------------------------
+        async function loadUsers() {
+            if (currentSession.role !== 'admin') return;
+
+            try {
+                const response = await fetchWithAuth('/api/users');
+                if (response.ok) {
+                    users = await response.json();
+                    renderUsersTable();
+                }
+            } catch (err) {
+                console.error("Error loading BDE users:", err);
+            }
+        }
+
+        function renderUsersTable() {
+            const tbody = document.getElementById('users-tbody');
+            tbody.innerHTML = '';
+
+            users.forEach(u => {
+                const tr = document.createElement('tr');
+                const isInactive = u.status === 'inactive';
+                const statusBadge = isInactive 
+                    ? `<span class="badge badge-lost">Inactive</span>` 
+                    : `<span class="badge badge-won">Active</span>`;
+                
+                let actionsHtml = '';
+                if (u.username === 'ceo' || u.username === currentSession.username) {
+                    actionsHtml = `<span style="color:var(--text-muted); font-size:0.8rem">Active Account</span>`;
+                } else {
+                    const toggleText = isInactive ? 'Re-activate' : 'Inactivate';
+                    const toggleColor = isInactive ? '#27AE60' : '#E67E22';
+                    actionsHtml = `
+                        <a href="#" style="color:${toggleColor}; font-weight:600; text-decoration:none; margin-right:12px;" onclick="toggleUserStatus('${u.username}')">${toggleText}</a>
+                        <a href="#" style="color:#C0392B; font-weight:600; text-decoration:none;" onclick="deleteUser('${u.username}')">Remove BDE</a>
+                    `;
+                }
+
+                tr.innerHTML = `
+                    <td style="font-weight:600; color:var(--secondary)">${u.username}</td>
+                    <td>${u.displayName}</td>
+                    <td><span class="badge ${u.role === 'admin' ? 'badge-sourced' : 'badge-demo'}">${u.role}</span></td>
+                    <td>${statusBadge}</td>
+                    <td style="text-align:center">${actionsHtml}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        async function toggleUserStatus(username) {
+            try {
+                const response = await fetchWithAuth('/api/users/toggle-status', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    alert(`Account '${data.username}' status changed to ${data.newStatus.toUpperCase()}.`);
+                    loadUsers();
+                } else {
+                    const errData = await response.json();
+                    alert(`Error: ${errData.error}`);
+                }
+            } catch (err) {
+                alert("Failed to communicate with local server.");
+            }
+        }
+
+        async function handleCreateUser(event) {
+            event.preventDefault();
+            const displayName = document.getElementById('new-display-name').value.trim();
+            const username = document.getElementById('new-username').value.trim();
+            const password = document.getElementById('new-password').value.trim();
+
+            try {
+                const response = await fetchWithAuth('/api/users', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ displayName, username, password })
+                });
+
+                if (response.ok) {
+                    alert(`Successfully created BDE login account for ${displayName}!`);
+                    document.getElementById('create-user-form').reset();
+                    loadUsers();
+                    loadLeads(); // Reload to capture BDE filters
+                } else {
+                    const errData = await response.json();
+                    alert(`Error creating account: ${errData.error}`);
+                }
+            } catch(err) {
+                alert("Failed to communicate with local server.");
+            }
+        }
+
+        async function deleteUser(username) {
+            if (confirm(`Are you sure you want to delete the login registry for '${username}'?`)) {
+                try {
+                    const response = await fetchWithAuth(`/api/users/${username}`, {
+                        method: 'DELETE'
+                    });
+                    if (response.ok) {
+                        alert("BDE Login account removed.");
+                        loadUsers();
+                        loadLeads();
+                    } else {
+                        const errData = await response.json();
+                        alert(`Error: ${errData.error}`);
+                    }
+                } catch(e) {
+                    alert("Connection error.");
+                }
+            }
+        }
+
+        // ----------------------------------------------------
+        // ORIGINAL LEADS DATABASE LOGIC
+        // ----------------------------------------------------
+
+        // Load leads database from local server API
+        async function loadLeads() {
+            try {
+                const response = await fetchWithAuth('/api/leads');
+                if (response.ok) {
+                    leads = await response.json();
+                    
+                    // Sort leads: Closed-Won first, then newest
+                    leads.sort((a, b) => {
+                        if (a.leadStage === 'Closed-Won' && b.leadStage !== 'Closed-Won') return -1;
+                        if (a.leadStage !== 'Closed-Won' && b.leadStage === 'Closed-Won') return 1;
+                        return new Date(b.dateAdded) - new Date(a.dateAdded);
+                    });
+                    
+                    updateStats();
+                    renderSpreadsheet();
+                    populateBdeFilter();
+                    interpolateEmail();
+                    if (activeTab === 'view-analytics') {
+                        renderAnalytics();
+                    }
+                }
+            } catch (err) {
+                console.error('Network error loading leads:', err);
+            }
+        }
+
+        // Save active leads to the local API
+        async function saveLeadsToDisk() {
+            try {
+                const response = await fetchWithAuth('/api/leads', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(leads)
+                });
+                if (response.ok) {
+                    console.log('Leads database synchronized successfully to leads.json');
+                    return true;
+                }
+                return false;
+            } catch (err) {
+                console.error('Network error synchronizing:', err);
+                return false;
+            }
+        }
+
+        // Update statistics cards
+        function updateStats() {
+            let totalPipeline = 0;
+            let activeCount = 0;
+            let wonCount = 0;
+            let lostCount = 0;
+
+            leads.forEach(l => {
+                const val = parseFloat(l.estValue) || 0;
+                
+                if (l.leadStage !== 'Closed-Lost') {
+                    totalPipeline += val;
+                }
+                
+                if (l.leadStage !== 'Closed-Won' && l.leadStage !== 'Closed-Lost') {
+                    activeCount++;
+                } else if (l.leadStage === 'Closed-Won') {
+                    wonCount++;
+                } else if (l.leadStage === 'Closed-Lost') {
+                    lostCount++;
+                }
+            });
+
+            const resolved = wonCount + lostCount;
+            const winRate = resolved > 0 ? (wonCount / resolved * 100).toFixed(1) + '%' : '0.0%';
+
+            document.getElementById('stat-pipeline').innerText = '$' + totalPipeline.toLocaleString();
+            document.getElementById('stat-active').innerText = activeCount;
+            document.getElementById('stat-won').innerText = wonCount;
+            document.getElementById('stat-winrate').innerText = winRate;
+        }
+
+        // Render Spreadsheet Grid
+        function renderSpreadsheet() {
+            const tbody = document.getElementById('leads-tbody');
+            tbody.innerHTML = '';
+
+            const searchQuery = document.getElementById('search-query').value.toLowerCase();
+            const stageFilter = document.getElementById('filter-stage').value;
+            const bdeFilter = currentSession.role === 'bde' ? '' : document.getElementById('filter-bde').value;
+            const channelFilter = document.getElementById('filter-channel').value;
+
+            let filteredCount = 0;
+
+            leads.forEach((lead, index) => {
+                const matchSearch = !searchQuery || 
+                                    lead.name.toLowerCase().includes(searchQuery) ||
+                                    (lead.contactName && lead.contactName.toLowerCase().includes(searchQuery)) ||
+                                    (lead.ehrSystem && lead.ehrSystem.toLowerCase().includes(searchQuery)) ||
+                                    lead.id.toLowerCase().includes(searchQuery);
+
+                const matchStage = !stageFilter || lead.leadStage === stageFilter;
+                const matchBde = !bdeFilter || lead.assignedBde === bdeFilter;
+                const matchChannel = !channelFilter || lead.outreachChannel === channelFilter;
+
+                if (matchSearch && matchStage && matchBde && matchChannel) {
+                    filteredCount++;
+                    
+                    const tr = document.createElement('tr');
+                    tr.dataset.index = index;
+                    tr.dataset.id = lead.id;
+                    
+                    const estValue = parseFloat(lead.estValue) || 0;
+                    const formattedValue = '$' + estValue.toLocaleString();
+
+                    let stageBadgeClass = 'badge-sourced';
+                    if (lead.leadStage === 'Closed-Won') stageBadgeClass = 'badge-won';
+                    else if (lead.leadStage === 'Closed-Lost') stageBadgeClass = 'badge-lost';
+                    else if (lead.leadStage === 'Proposal Sent') stageBadgeClass = 'badge-proposal';
+                    else if (lead.leadStage === 'Negotiating') stageBadgeClass = 'badge-negotiating';
+                    else if (lead.leadStage === 'Discovery Scheduled') stageBadgeClass = 'badge-demo';
+                    else if (lead.leadStage === 'Contacted') stageBadgeClass = 'badge-contacted';
+
+                    let fuBadgeClass = 'badge-fu-none';
+                    if (lead.followUpStatus === 'Active Conversation') fuBadgeClass = 'badge-fu-active';
+                    else if (lead.followUpStatus && lead.followUpStatus.includes('Follow-up')) fuBadgeClass = 'badge-fu-cadence';
+
+                    tr.innerHTML = `
+                        <td style="font-weight:600; color:var(--secondary); text-align:center">${lead.id}</td>
+                        <td class="editable" data-field="name">${lead.name}</td>
+                        <td class="editable" data-field="specialty">${lead.specialty || '-'}</td>
+                        <td class="editable" data-field="contactName">${lead.contactName || '-'}</td>
+                        <td class="editable" data-field="contactTitle">${lead.contactTitle || '-'}</td>
+                        <td class="editable" data-field="contactEmail">${lead.contactEmail || '-'}</td>
+                        <td class="editable" data-field="contactPhone">${lead.contactPhone || '-'}</td>
+                        <td class="editable" data-field="ehrSystem">${lead.ehrSystem || '-'}</td>
+                        <td class="editable" data-field="leadStage" data-type="select-stage"><span class="badge ${stageBadgeClass}">${lead.leadStage}</span></td>
+                        <td class="editable" data-field="followUpStatus" data-type="select-followup"><span class="badge ${fuBadgeClass}">${lead.followUpStatus || 'None'}</span></td>
+                        <td class="editable" data-field="estValue" style="text-align:right; font-weight:600">${formattedValue}</td>
+                        <td class="editable" data-field="assignedBde">${lead.assignedBde}</td>
+                        <td class="editable" data-field="dateLastTouch" style="text-align:center">${lead.dateLastTouch || '-'}</td>
+                        <td style="text-align:center">
+                            <a href="#" style="color:var(--secondary); font-weight:600; text-decoration:none; margin-right:10px" onclick="editLead(${index})">Edit</a>
+                            <a href="#" style="color:#C0392B; font-weight:600; text-decoration:none" onclick="deleteLead(${index})">Delete</a>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                }
+            });
+
+            document.getElementById('filtered-count').innerText = filteredCount;
+            document.getElementById('total-count').innerText = leads.length;
+
+            populateEmailLeadSelector();
+        }
+
+        // Switch panel view tabs
+        function switchView(viewId, element) {
+            activeTab = viewId;
+            document.querySelectorAll('.view-panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            
+            document.getElementById(viewId).classList.add('active');
+            element.classList.add('active');
+            
+            const titleEl = document.getElementById('header-panel-title');
+            const descEl = document.getElementById('header-panel-desc');
+
+            if (viewId === 'view-spreadsheet') {
+                titleEl.innerText = "BDE Lead Tracker Database";
+                descEl.innerText = "Real-time collaborative workspace for Zencora's Business Development Executives.";
+            } else if (viewId === 'view-analytics') {
+                titleEl.innerText = "BDE Pipeline Dashboard & Metrics";
+                descEl.innerText = "Visual pipeline breakdowns, estimated contract values, and conversion analysis.";
+                renderAnalytics();
+            } else if (viewId === 'view-sop') {
+                titleEl.innerText = "SOP Playbook & Client Negotiations";
+                descEl.innerText = "Step-by-step outreach cadence, dynamic templates, and proven objection scripts.";
+            } else if (viewId === 'view-users') {
+                titleEl.innerText = "BDE Login & Account Control Panel";
+                descEl.innerText = "Administrator credentials manager for registering new sales executives.";
+                loadUsers();
+            }
+        }
+
+        // Populating dynamic BDE filters
+        function populateBdeFilter() {
+            const bdeFilter = document.getElementById('filter-bde');
+            if (currentSession && currentSession.role === 'bde') return; // BDE doesn't use this filter
+
+            const bdes = new Set();
+            leads.forEach(l => {
+                if (l.assignedBde) bdes.add(l.assignedBde.trim());
+            });
+
+            const currentSelection = bdeFilter.value;
+
+            bdeFilter.innerHTML = '<option value="">All BDEs</option>';
+            bdes.forEach(bde => {
+                const opt = document.createElement('option');
+                opt.value = bde;
+                opt.innerText = bde;
+                bdeFilter.appendChild(opt);
+            });
+
+            bdeFilter.value = currentSelection;
+        }
+
+        // Filter leads table in real-time
+        function filterLeads() {
+            renderSpreadsheet();
+        }
+
+        // Double-click cell inline editing
+        function setupEditableTableEvents() {
+            const tbody = document.getElementById('leads-tbody');
+            
+            tbody.addEventListener('dblclick', (e) => {
+                const td = e.target.closest('td.editable');
+                if (!td) return;
+                
+                const tr = td.closest('tr');
+                const leadIndex = parseInt(tr.dataset.index);
+                const field = td.dataset.field;
+                const type = td.dataset.type;
+                const currentValue = leads[leadIndex][field];
+
+                // BDE cannot edit BDE assignment cell
+                if (currentSession.role === 'bde' && field === 'assignedBde') return;
+
+                if (td.querySelector('input') || td.querySelector('select')) return; // already editing
+
+                if (type === 'select-stage') {
+                    const select = document.createElement('select');
+                    select.className = 'cell-input';
+                    const stages = ['Sourced', 'Contacted', 'Discovery Scheduled', 'Proposal Sent', 'Negotiating', 'Closed-Won', 'Closed-Lost'];
+                    stages.forEach(st => {
+                        const opt = document.createElement('option');
+                        opt.value = st;
+                        opt.text = st;
+                        if (st === currentValue) opt.selected = true;
+                        select.appendChild(opt);
+                    });
+                    td.innerHTML = '';
+                    td.appendChild(select);
+                    select.focus();
+
+                    select.addEventListener('blur', () => saveCellEdit(leadIndex, field, select.value, td));
+                    select.addEventListener('change', () => saveCellEdit(leadIndex, field, select.value, td));
+                }
+                else if (type === 'select-followup') {
+                    const select = document.createElement('select');
+                    select.className = 'cell-input';
+                    const list = ['Day 1 - Sent', 'Day 4 - Follow-up 1', 'Day 9 - Follow-up 2', 'Day 15 - Final', 'Active Conversation', 'No Response'];
+                    list.forEach(item => {
+                        const opt = document.createElement('option');
+                        opt.value = item;
+                        opt.text = item;
+                        if (item === currentValue) opt.selected = true;
+                        select.appendChild(opt);
+                    });
+                    td.innerHTML = '';
+                    td.appendChild(select);
+                    select.focus();
+
+                    select.addEventListener('blur', () => saveCellEdit(leadIndex, field, select.value, td));
+                    select.addEventListener('change', () => saveCellEdit(leadIndex, field, select.value, td));
+                }
+                else {
+                    const input = document.createElement('input');
+                    input.type = field === 'estValue' ? 'number' : 'text';
+                    input.className = 'cell-input';
+                    input.value = currentValue || '';
+                    input.setAttribute('autocomplete', 'off');
+                    input.setAttribute('spellcheck', 'false');
+                    td.innerHTML = '';
+                    td.appendChild(input);
+                    input.focus();
+
+                    input.addEventListener('blur', () => saveCellEdit(leadIndex, field, input.value, td));
+                    input.addEventListener('keydown', (evt) => {
+                        if (evt.key === 'Enter') saveCellEdit(leadIndex, field, input.value, td);
+                        if (evt.key === 'Escape') renderSpreadsheet();
+                    });
+                }
+            });
+        }
+
+        async function saveCellEdit(index, field, newValue, tdElement) {
+            if (field === 'estValue') {
+                leads[index][field] = parseFloat(newValue) || 0;
+            } else {
+                leads[index][field] = newValue.trim();
+            }
+
+            updateStats();
+            renderSpreadsheet();
+            await saveLeadsToDisk();
+            
+            populateBdeFilter();
+            if (activeTab === 'view-analytics') {
+                renderAnalytics();
+            }
+        }
+
+        // Add/Edit Lead Drawer Actions
+        function openNewLeadDrawer() {
+            document.getElementById('drawer-title').innerText = "Add New Prospect Lead";
+            document.getElementById('lead-index').value = "-1";
+            document.getElementById('lead-id').value = "";
+            document.getElementById('lead-form').reset();
+            
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('form-nextaction').value = today;
+
+            // Autofill BDE display name if user is BDE
+            if (currentSession.role === 'bde') {
+                document.getElementById('form-bde').value = currentSession.displayName;
+            }
+
+            document.getElementById('lead-drawer').style.display = 'flex';
+        }
+
+        function editLead(index) {
+            const lead = leads[index];
+            document.getElementById('drawer-title').innerText = `Edit Lead (${lead.id})`;
+            document.getElementById('lead-index').value = index;
+            document.getElementById('lead-id').value = lead.id;
+
+            document.getElementById('form-name').value = lead.name;
+            document.getElementById('form-specialty').value = lead.specialty || '';
+            document.getElementById('form-ehr').value = lead.ehrSystem || '';
+            document.getElementById('form-contact').value = lead.contactName || '';
+            document.getElementById('form-title').value = lead.contactTitle || '';
+            document.getElementById('form-email').value = lead.contactEmail || '';
+            document.getElementById('form-phone').value = lead.contactPhone || '';
+            document.getElementById('form-channel').value = lead.outreachChannel || 'Email';
+            document.getElementById('form-bde').value = lead.assignedBde || '';
+            document.getElementById('form-stage').value = lead.leadStage || 'Sourced';
+            document.getElementById('form-value').value = lead.estValue || 0;
+            document.getElementById('form-followup').value = lead.followUpStatus || 'Day 1 - Sent';
+            document.getElementById('form-nextaction').value = lead.nextActionDate || '';
+            document.getElementById('form-notes').value = lead.notes || '';
+
+            document.getElementById('lead-drawer').style.display = 'flex';
+        }
+
+        function hideLeadDrawer() {
+            document.getElementById('lead-drawer').style.display = 'none';
+        }
+
+        function closeLeadDrawer(e) {
+            if (e.target.id === 'lead-drawer') hideLeadDrawer();
+        }
+
+        async function saveLead(event) {
+            event.preventDefault();
+
+            const idx = parseInt(document.getElementById('lead-index').value);
+            const today = new Date().toISOString().split('T')[0];
+            
+            const bdeName = currentSession.role === 'bde' 
+                ? currentSession.displayName 
+                : document.getElementById('form-bde').value.trim();
+
+            const leadRecord = {
+                name: document.getElementById('form-name').value.trim(),
+                specialty: document.getElementById('form-specialty').value.trim(),
+                ehrSystem: document.getElementById('form-ehr').value.trim(),
+                contactName: document.getElementById('form-contact').value.trim(),
+                contactTitle: document.getElementById('form-title').value.trim(),
+                contactEmail: document.getElementById('form-email').value.trim(),
+                contactPhone: document.getElementById('form-phone').value.trim(),
+                outreachChannel: document.getElementById('form-channel').value,
+                assignedBde: bdeName,
+                leadStage: document.getElementById('form-stage').value,
+                estValue: parseFloat(document.getElementById('form-value').value) || 0,
+                followUpStatus: document.getElementById('form-followup').value,
+                nextActionDate: document.getElementById('form-nextaction').value,
+                notes: document.getElementById('form-notes').value.trim(),
+                dateLastTouch: today
+            };
+
+            if (idx === -1) {
+                // Generate secure local random Lead ID based on size, or unique seed
+                const maxNum = leads.reduce((max, lead) => {
+                    const num = parseInt(lead.id.replace('ZHS-LD-', '')) || 0;
+                    return num > max ? num : max;
+                }, 0);
+                
+                leadRecord.id = `ZHS-LD-${(maxNum + 1).toString().padStart(3, '0')}`;
+                leadRecord.dateAdded = today;
+                leads.push(leadRecord);
+            } else {
+                leadRecord.id = document.getElementById('lead-id').value;
+                leadRecord.dateAdded = leads[idx].dateAdded;
+                leads[idx] = leadRecord;
+            }
+
+            hideLeadDrawer();
+            updateStats();
+            renderSpreadsheet();
+            populateBdeFilter();
+            
+            await saveLeadsToDisk();
+
+            if (activeTab === 'view-analytics') {
+                renderAnalytics();
+            }
+        }
+
+        async function deleteLead(index) {
+            if (confirm(`Are you sure you want to delete lead ${leads[index].id} (${leads[index].name})?`)) {
+                leads.splice(index, 1);
+                updateStats();
+                renderSpreadsheet();
+                populateBdeFilter();
+                await saveLeadsToDisk();
+                if (activeTab === 'view-analytics') {
+                    renderAnalytics();
+                }
+            }
+        }
+
+        // Bulk Import Modal Actions
+        function openBulkImport() {
+            document.getElementById('import-drawer').style.display = 'flex';
+        }
+        function hideImportDrawer() {
+            document.getElementById('import-drawer').style.display = 'none';
+        }
+        function closeImportDrawer(e) {
+            if (e.target.id === 'import-drawer') hideImportDrawer();
+        }
+
+        function triggerFileSelect() {
+            document.getElementById('file-uploader').click();
+        }
+
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                const text = e.target.result;
+                let importedLeads = [];
+
+                if (file.name.endsWith('.json')) {
+                    try {
+                        importedLeads = JSON.parse(text);
+                    } catch (err) {
+                        alert('Error parsing JSON file. Check structure.');
+                        return;
+                    }
+                } 
+                else if (file.name.endsWith('.csv')) {
+                    importedLeads = parseCSV(text);
+                }
+
+                if (importedLeads.length > 0) {
+                    const today = new Date().toISOString().split('T')[0];
+                    let maxNum = leads.reduce((max, lead) => {
+                        const num = parseInt(lead.id.replace('ZHS-LD-', '')) || 0;
+                        return num > max ? num : max;
+                    }, 0);
+
+                    // Add IDs and dates to imported entries
+                    importedLeads.forEach(l => {
+                        maxNum++;
+                        l.id = l.id || `ZHS-LD-${maxNum.toString().padStart(3, '0')}`;
+                        l.dateAdded = l.dateAdded || today;
+                        l.name = l.name || 'Unnamed Clinic';
+                        l.specialty = l.specialty || '';
+                        l.contactName = l.contactName || '';
+                        l.contactTitle = l.contactTitle || '';
+                        l.contactEmail = l.contactEmail || '';
+                        l.contactPhone = l.contactPhone || '';
+                        l.ehrSystem = l.ehrSystem || '';
+                        l.outreachChannel = l.outreachChannel || 'Email';
+                        l.leadStage = l.leadStage || 'Sourced';
+                        l.followUpStatus = l.followUpStatus || 'Day 1 - Sent';
+                        l.estValue = parseFloat(l.estValue) || 0;
+                        
+                        // Force BDE to current user if logged in as BDE, else allow import BDE name
+                        l.assignedBde = currentSession.role === 'bde' ? currentSession.displayName : (l.assignedBde || 'Unassigned');
+                        l.dateLastTouch = l.dateLastTouch || today;
+                        l.notes = l.notes || '';
+                        leads.push(l);
+                    });
+
+                    hideImportDrawer();
+                    updateStats();
+                    renderSpreadsheet();
+                    populateBdeFilter();
+                    await saveLeadsToDisk();
+                    alert(`Successfully imported ${importedLeads.length} leads!`);
+                } else {
+                    alert('No leads detected or invalid file structure.');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // Simple CSV Parser
+        function parseCSV(text) {
+            const lines = text.split('\n').map(line => line.trim()).filter(line => line);
+            if (lines.length <= 1) return [];
+
+            const headers = lines[0].split(',').map(h => h.trim().replace(/^["']|["']$/g, ''));
+            const results = [];
+
+            for (let i = 1; i < lines.length; i++) {
+                const values = lines[i].split(',').map(v => v.trim().replace(/^["']|["']$/g, ''));
+                const obj = {};
+                
+                headers.forEach((header, idx) => {
+                    obj[header] = values[idx] || '';
+                });
+                results.push(obj);
+            }
+            return results;
+        }
+
+        // Synchronize and Download Styled Excel Spreadsheet
+        async function syncAndDownloadExcel() {
+            const syncOk = await saveLeadsToDisk();
+            if (!syncOk) {
+                alert('Warning: Could not sync current leads list to Python server.');
+            }
+
+            // Trigger server Excel compilation and download by passing session token in query string
+            window.location.href = `/api/download?token=${currentSession.token}`;
+        }
+
+        // Analytics rendering using ChartJS
+        function renderAnalytics() {
+            const stageCounts = {
+                'Sourced': 0, 'Contacted': 0, 'Discovery Scheduled': 0, 'Proposal Sent': 0, 'Negotiating': 0, 'Closed-Won': 0, 'Closed-Lost': 0
+            };
+            const stageValues = {
+                'Sourced': 0, 'Contacted': 0, 'Discovery Scheduled': 0, 'Proposal Sent': 0, 'Negotiating': 0, 'Closed-Won': 0, 'Closed-Lost': 0
+            };
+            const bdeData = {};
+            const ehrCounts = {};
+
+            leads.forEach(l => {
+                if (stageCounts[l.leadStage] !== undefined) {
+                    stageCounts[l.leadStage]++;
+                    stageValues[l.leadStage] += parseFloat(l.estValue) || 0;
+                }
+
+                if (l.assignedBde) {
+                    const bde = l.assignedBde.trim();
+                    if (!bdeData[bde]) {
+                        bdeData[bde] = { managed: 0, won: 0, lost: 0, revenue: 0 };
+                    }
+                    bdeData[bde].managed++;
+                    if (l.leadStage === 'Closed-Won') {
+                        bdeData[bde].won++;
+                        bdeData[bde].revenue += parseFloat(l.estValue) || 0;
+                    } else if (l.leadStage === 'Closed-Lost') {
+                        bdeData[bde].lost++;
+                    }
+                }
+
+                if (l.ehrSystem) {
+                    const ehr = l.ehrSystem.trim();
+                    if (ehr && ehr !== '-') {
+                        ehrCounts[ehr] = (ehrCounts[ehr] || 0) + 1;
+                    }
+                }
+            });
+
+            // 1. Stage Counts Chart
+            if (charts.counts) charts.counts.destroy();
+            const ctxCounts = document.getElementById('chart-stages').getContext('2d');
+            charts.counts = new Chart(ctxCounts, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(stageCounts),
+                    datasets: [{
+                        label: 'Number of Prospects',
+                        data: Object.values(stageCounts),
+                        backgroundColor: [
+                            '#94A3B8', // Sourced
+                            '#818CF8', // Contacted
+                            '#60A5FA', // Demo
+                            '#FBBF24', // Proposal
+                            '#F59E0B', // Negotiating
+                            '#34D399', // Won
+                            '#F87171'  // Lost
+                        ],
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+                }
+            });
+
+            // 2. Stage Values Chart
+            if (charts.values) charts.values.destroy();
+            const ctxValues = document.getElementById('chart-values').getContext('2d');
+            charts.values = new Chart(ctxValues, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(stageValues),
+                    datasets: [{
+                        data: Object.values(stageValues),
+                        backgroundColor: [
+                            '#94A3B8', '#818CF8', '#60A5FA', '#FBBF24', '#F59E0B', '#34D399', '#F87171'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'right', labels: { boxWidth: 12, font: { family: 'Inter' } } }
+                    }
+                }
+            });
+
+            // 3. Render BDE Performance Table
+            const bdeTbody = document.getElementById('bde-metrics-tbody');
+            bdeTbody.innerHTML = '';
+            
+            // Hide performance card completely for BDE if they shouldn't compare, or filter to only show them.
+            // Let's show only their own line for BDE, and all lines for Admin.
+            const isBde = currentSession.role === 'bde';
+            
+            let totalManaged = 0;
+            let totalWon = 0;
+            let totalRevenue = 0;
+
+            Object.keys(bdeData).forEach(bdeName => {
+                // If user is BDE, filter out other BDE metrics
+                if (isBde && bdeName.toLowerCase() !== currentSession.displayName.toLowerCase()) {
+                    return;
+                }
+
+                const data = bdeData[bdeName];
+                const resolved = data.won + data.lost;
+                const winRate = resolved > 0 ? (data.won / resolved * 100).toFixed(1) + '%' : '0.0%';
+                
+                totalManaged += data.managed;
+                totalWon += data.won;
+                totalRevenue += data.revenue;
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="font-weight:600; color:var(--text-dark)">${bdeName}</td>
+                    <td style="text-align:center">${data.managed}</td>
+                    <td style="text-align:center">${data.won}</td>
+                    <td style="text-align:right">${winRate}</td>
+                    <td style="text-align:right; font-weight:600; color:#27AE60">$${data.revenue.toLocaleString()}</td>
+                `;
+                bdeTbody.appendChild(tr);
+            });
+
+            // Total row (Admin only gets a dynamic summary total line)
+            if (!isBde) {
+                const trTotal = document.createElement('tr');
+                trTotal.style.borderTop = '2px double var(--primary)';
+                trTotal.innerHTML = `
+                    <td style="font-weight:700; color:var(--primary)">Total Pipeline</td>
+                    <td style="text-align:center; font-weight:700">${totalManaged}</td>
+                    <td style="text-align:center; font-weight:700">${totalWon}</td>
+                    <td style="text-align:right; font-weight:700">-</td>
+                    <td style="text-align:right; font-weight:700; color:var(--primary)">$${totalRevenue.toLocaleString()}</td>
+                `;
+                bdeTbody.appendChild(trTotal);
+            }
+
+            // 4. Render EHR Stats Table
+            const ehrTbody = document.getElementById('ehr-metrics-tbody');
+            ehrTbody.innerHTML = '';
+
+            const sortedEhrs = Object.keys(ehrCounts).sort((a,b) => ehrCounts[b] - ehrCounts[a]);
+            sortedEhrs.forEach(ehrName => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="font-weight:600; color:var(--secondary)">${ehrName}</td>
+                    <td style="text-align:center; font-weight:600">${ehrCounts[ehrName]}</td>
+                `;
+                ehrTbody.appendChild(tr);
+            });
+            if (sortedEhrs.length === 0) {
+                ehrTbody.innerHTML = '<tr><td colspan="2" style="text-align:center; color:var(--text-muted)">No EHR details logged yet</td></tr>';
+            }
+        }
+
+        // Render SOP objection Cheat Sheet
+        function renderObjections() {
+            const container = document.getElementById('objections-container');
+            container.innerHTML = '';
+            
+            objectionsData.forEach(obj => {
+                const card = document.createElement('div');
+                card.className = 'objection-card';
+                card.innerHTML = `
+                    <div class="objection-title">${obj.title}</div>
+                    <div class="objection-strategy">${obj.strategy}</div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // Populate email interpolation lead selector
+        function populateEmailLeadSelector() {
+            const select = document.getElementById('compose-lead-select');
+            const currentSelection = select.value;
+            select.innerHTML = '<option value="">-- Standalone / Custom (No Lead Selected) --</option>';
+
+            leads.forEach((lead, idx) => {
+                if (lead.name) {
+                    const opt = document.createElement('option');
+                    opt.value = idx;
+                    opt.innerText = `${lead.name} (${lead.contactName || 'No Contact'}) - ${lead.specialty || 'General'}`;
+                    select.appendChild(opt);
+                }
+            });
+
+            if (currentSelection && select.querySelector(`option[value="${currentSelection}"]`)) {
+                select.value = currentSelection;
+            }
+        }
+
+        function onLeadSelectChange() {
+            const leadIdx = document.getElementById('compose-lead-select').value;
+            const specialtySelect = document.getElementById('compose-specialty-select');
+
+            if (leadIdx !== "" && leads[leadIdx]) {
+                const leadSpec = (leads[leadIdx].specialty || "").toLowerCase();
+                if (leadSpec.includes('cardio')) specialtySelect.value = 'cardiology';
+                else if (leadSpec.includes('ortho')) specialtySelect.value = 'orthopedics';
+                else if (leadSpec.includes('pediat')) specialtySelect.value = 'pediatrics';
+                else if (leadSpec.includes('internal') || leadSpec.includes('family')) specialtySelect.value = 'internal_medicine';
+                else if (leadSpec.includes('radio') || leadSpec.includes('imaging')) specialtySelect.value = 'radiology';
+                else if (leadSpec.includes('gastro') || leadSpec.includes('gi')) specialtySelect.value = 'gastroenterology';
+                else if (leadSpec.includes('derm')) specialtySelect.value = 'dermatology';
+                else if (leadSpec.includes('psych') || leadSpec.includes('mental')) specialtySelect.value = 'psychiatry';
+                else if (leadSpec.includes('neuro') || leadSpec.includes('pain')) specialtySelect.value = 'neurology';
+                else if (leadSpec.includes('urgent') || leadSpec.includes('emergen')) specialtySelect.value = 'urgent_care';
+                else if (leadSpec.includes('physic') || leadSpec.includes('rehab') || leadSpec.includes('pt')) specialtySelect.value = 'physical_therapy';
+                else if (leadSpec.includes('dent')) specialtySelect.value = 'dental';
+                else if (leadSpec.includes('podi') || leadSpec.includes('wound')) specialtySelect.value = 'podiatry';
+            }
+            interpolateEmail();
+        }
+
+        // Interpolate email templates (Works standalone or with selected lead)
+        function interpolateEmail() {
+            const leadIdx = document.getElementById('compose-lead-select').value;
+            const specialtyKey = document.getElementById('compose-specialty-select').value;
+            const textarea = document.getElementById('compose-textarea');
+
+            const template = emailTemplates[specialtyKey] || emailTemplates.rcm_general;
+
+            let practiceName = "[Practice Name / Clinic Name]";
+            let lastName = "[Doctor / Practice Administrator]";
+            let bdeName = currentSession ? currentSession.displayName : "[BDE Name]";
+
+            if (leadIdx !== "" && leads[leadIdx]) {
+                const lead = leads[leadIdx];
+                if (lead.name) practiceName = lead.name;
+                if (lead.contactName) {
+                    const parts = lead.contactName.trim().split(' ');
+                    lastName = parts[parts.length - 1];
+                }
+                if (currentSession && currentSession.role === 'bde') {
+                    bdeName = currentSession.displayName;
+                } else if (lead.assignedBde) {
+                    bdeName = lead.assignedBde;
+                }
+            }
+
+            let interpolated = template
+                .replace(/{PracticeName}/g, practiceName)
+                .replace(/{LastName}/g, lastName)
+                .replace(/{BdeName}/g, bdeName);
+
+            textarea.value = interpolated;
+        }
+
+        // Copy composed email text to clipboard
+        function copyComposedEmail() {
+            const textarea = document.getElementById('compose-textarea');
+            if (!textarea.value || textarea.value.trim() === "") {
+                alert("No email template available to copy.");
+                return;
+            }
+
+            textarea.select();
+            document.execCommand('copy');
+            alert("Email template copied successfully to clipboard!");
+        }
+    </script>
+</body>
+</html>

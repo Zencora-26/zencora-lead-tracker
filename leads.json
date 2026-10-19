@@ -1,0 +1,40 @@
+[
+    {
+        "name": "Venkateswara Hospitals",
+        "specialty": "Multiple",
+        "ehrSystem": "Unknown",
+        "contactName": "Rajesh Kumar",
+        "contactTitle": "COO",
+        "contactEmail": "",
+        "contactPhone": "",
+        "outreachChannel": "LinkedIn",
+        "assignedBde": "Admin",
+        "leadStage": "Contacted",
+        "estValue": 1000,
+        "followUpStatus": "Day 1 - Sent",
+        "nextActionDate": "2026-08-12",
+        "notes": "Ensure Pitching about zencora",
+        "dateLastTouch": "2026-08-10",
+        "id": "ZHS-LD-003",
+        "dateAdded": "2026-08-10"
+    },
+    {
+        "name": "AM Billers",
+        "specialty": "Home Health",
+        "ehrSystem": "Medisoft",
+        "contactName": "Derick Jennings",
+        "contactTitle": "Director of Operations",
+        "contactEmail": "derick@amb5280.com",
+        "contactPhone": "+1 303 968 9512",
+        "outreachChannel": "Email",
+        "assignedBde": "Prakash Sah",
+        "leadStage": "Closed-Lost",
+        "estValue": 750,
+        "followUpStatus": "No Response",
+        "nextActionDate": "2026-07-27",
+        "notes": "Should Start Training",
+        "dateLastTouch": "2026-07-22",
+        "id": "ZHS-LD-001",
+        "dateAdded": "2026-07-22"
+    }
+]
