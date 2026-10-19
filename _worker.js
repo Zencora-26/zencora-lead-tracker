@@ -3,12 +3,12 @@
 
 const DEFAULT_USERS = [
     {
-        "username": "ceo",
+        "username": "Md_zencora_Muji",
         "passwordHash": "4445d328252601d795228de88d097ffd6688f7b8de88de62c698317d9a7e2abe",
         "role": "admin",
-        "displayName": "Mujibu Rahuman P M",
-        "email": "ceo@zencorahs.com",
-        "phone": "+1 555-0100",
+        "displayName": "Md Mujibu Rahuman (CEO)",
+        "email": "rahuman@zencorahs.com",
+        "phone": "+916374733948",
         "avatar": "",
         "status": "active"
     },
@@ -123,6 +123,8 @@ function findUserByIdentifier(users, query) {
 
     return users.find(u => {
         if ((u.username || '').toLowerCase() === cleanQ) return true;
+        // CEO aliases
+        if (cleanQ === 'ceo' && ((u.username || '').toLowerCase() === 'md_zencora_muji' || u.role === 'admin')) return true;
         if ((u.email || '').toLowerCase() === cleanQ) return true;
         if (cleanPhoneQ && cleanPhoneQ.length >= 7 && normalizePhone(u.phone) === cleanPhoneQ) return true;
         return false;
@@ -149,17 +151,38 @@ function jsonResponse(data, status = 200) {
 
 // Database Helpers
 async function getUsers(env) {
+    let users = null;
     if (env && env.DB) {
-        const data = await env.DB.get('users', 'json');
-        if (data && Array.isArray(data)) return data;
-        await env.DB.put('users', JSON.stringify(DEFAULT_USERS));
-        return DEFAULT_USERS;
+        users = await env.DB.get('users', 'json');
+    } else {
+        users = MEMORY_STORE.users;
     }
-    if (!MEMORY_STORE.users) {
-        MEMORY_STORE.users = JSON.parse(JSON.stringify(DEFAULT_USERS));
+
+    if (!users || !Array.isArray(users) || users.length === 0) {
+        users = JSON.parse(JSON.stringify(DEFAULT_USERS));
+        if (env && env.DB) await env.DB.put('users', JSON.stringify(users));
+        else MEMORY_STORE.users = users;
+        return users;
     }
-    return MEMORY_STORE.users;
+
+    // Auto-migrate legacy CEO record
+    let modified = false;
+    const legacyCeo = users.find(u => (u.username || '').toLowerCase() === 'ceo' || (u.role === 'admin' && (u.username || '').toLowerCase() !== 'md_zencora_muji'));
+    if (legacyCeo && legacyCeo.username.toLowerCase() === 'ceo') {
+        legacyCeo.username = "Md_zencora_Muji";
+        legacyCeo.displayName = "Md Mujibu Rahuman (CEO)";
+        legacyCeo.email = "rahuman@zencorahs.com";
+        legacyCeo.phone = "+916374733948";
+        modified = true;
+    }
+    if (modified) {
+        if (env && env.DB) await env.DB.put('users', JSON.stringify(users));
+        else MEMORY_STORE.users = users;
+    }
+
+    return users;
 }
+
 
 async function saveUsers(env, users) {
     if (env && env.DB) {
@@ -360,7 +383,7 @@ export default {
                 const user = findUserByIdentifier(users, identifier);
 
                 if (!user) {
-                    return jsonResponse({ error: 'No active user account found matching this identifier.' }, 404);
+                    return jsonResponse({ error: 'No registered account found matching that User ID, Email, or Mobile Number.' }, 404);
                 }
 
                 if (user.status === 'inactive') {
@@ -724,7 +747,70 @@ export default {
                 }
             }
 
-            // 13. Admin Only Route: POST /api/users/toggle-status
+            // 13. Admin Only Route: POST /api/users/update (Edit all profile data of any user or admin)
+            if (path === '/api/users/update' && method === 'POST') {
+                if (session.role !== 'admin') {
+                    return jsonResponse({ error: 'Forbidden. Admin privileges required.' }, 403);
+                }
+
+                const body = await request.json().catch(() => ({}));
+                const targetUsername = (body.targetUsername || '').trim();
+                const displayName = (body.displayName || '').trim();
+                const newUsername = (body.newUsername || '').trim();
+                const email = (body.email || '').trim();
+                const phone = (body.phone || '').trim();
+                const role = (body.role || '').trim();
+                const status = (body.status || '').trim();
+                const newPassword = (body.newPassword || '').trim();
+
+                if (!targetUsername) return jsonResponse({ error: 'Missing target username.' }, 400);
+
+                const users = await getUsers(env);
+                const targetUser = users.find(u => u.username.toLowerCase() === targetUsername.toLowerCase());
+                if (!targetUser) return jsonResponse({ error: 'User not found.' }, 404);
+
+                if (displayName) targetUser.displayName = displayName;
+                if (email) targetUser.email = email;
+                if (phone) targetUser.phone = phone;
+                if (role && ['admin', 'bde'].includes(role.toLowerCase())) targetUser.role = role.toLowerCase();
+                if (status && ['active', 'inactive'].includes(status.toLowerCase())) targetUser.status = status.toLowerCase();
+
+                if (newUsername && newUsername.toLowerCase() !== targetUsername.toLowerCase()) {
+                    if (users.some(u => u.username.toLowerCase() === newUsername.toLowerCase() && u !== targetUser)) {
+                        return jsonResponse({ error: 'New username is already taken by another account.' }, 400);
+                    }
+                    targetUser.username = newUsername;
+                }
+
+                if (newPassword) {
+                    if (newPassword.length < 4) {
+                        return jsonResponse({ error: 'Password must be at least 4 characters.' }, 400);
+                    }
+                    targetUser.passwordHash = await hashPassword(newPassword);
+                }
+
+                await saveUsers(env, users);
+
+                // If admin updated their own account, update session
+                if (targetUsername.toLowerCase() === session.username.toLowerCase()) {
+                    let token = null;
+                    const authHeader = request.headers.get('Authorization');
+                    if (authHeader && authHeader.startsWith('Bearer ')) token = authHeader.split(' ')[1].trim();
+                    if (token) {
+                        await updateSessionUser(env, token, {
+                            username: targetUser.username,
+                            displayName: targetUser.displayName,
+                            email: targetUser.email,
+                            phone: targetUser.phone,
+                            role: targetUser.role
+                        });
+                    }
+                }
+
+                return jsonResponse({ status: 'success', user: targetUser }, 200);
+            }
+
+            // 14. Admin Only Route: POST /api/users/toggle-status
             if (path === '/api/users/toggle-status' && method === 'POST') {
                 if (session.role !== 'admin') {
                     return jsonResponse({ error: 'Forbidden. Admin privileges required.' }, 403);

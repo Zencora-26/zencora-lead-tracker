@@ -1803,7 +1803,7 @@
         </div>
     </div>
 
-    <!-- CHANGE PASSWORD MODAL -->
+    <!-- CHANGE PASSWORD DRAWER -->
     <div id="password-drawer" class="drawer-overlay" onclick="closePasswordDrawer(event)">
         <div class="drawer" onclick="event.stopPropagation()" style="width: 450px;">
             <div class="drawer-header">
@@ -1826,7 +1826,15 @@
                 </div>
                 
                 <div id="pwd-error-msg" style="display:none; color:#E74C3C; font-size:0.85rem; font-weight:600; background-color:#FADBD8; padding:8px 12px; border-radius:4px;"></div>
-                
+
+                <div style="display: flex; gap: 8px; margin-top: 0.5rem;">
+                    <button type="button" class="btn btn-secondary" style="flex: 1; justify-content: center;" onclick="hidePasswordDrawer()">Cancel</button>
+                    <button type="submit" class="btn btn-primary" style="flex: 1; justify-content: center;">Update Password</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- MY PERSONAL PROFILE DRAWER -->
     <div id="profile-drawer" class="drawer-overlay" onclick="closeProfileDrawer(event)">
         <div class="drawer" onclick="event.stopPropagation()" style="width: 480px;">
@@ -1875,6 +1883,13 @@
                     </div>
                 </div>
 
+                <!-- Admin Direct Edit Button -->
+                <div id="prof-admin-edit-box" style="display: none;">
+                    <button type="button" class="btn btn-primary" onclick="openAdminEditMyProfile()" style="width: 100%; justify-content: center; font-size: 0.85rem; padding: 10px 14px;">
+                        ✏️ Edit My Profile Details
+                    </button>
+                </div>
+
                 <!-- Non-Admin Request Change Banner -->
                 <div id="prof-bde-request-box" style="background: rgba(41, 128, 185, 0.08); border: 1px solid rgba(41, 128, 185, 0.2); border-radius: var(--border-radius-md); padding: 1rem; display: flex; flex-direction: column; gap: 8px;">
                     <div style="display: flex; align-items: center; justify-content: space-between;">
@@ -1906,6 +1921,76 @@
                     </button>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- ADMIN DIRECT EDIT USER MODAL -->
+    <div id="edit-user-modal" class="modal-overlay" onclick="closeEditUserModal(event)">
+        <div class="modal-card" onclick="event.stopPropagation()" style="width: 480px; max-width: 95vw;">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <h3 id="edit-user-title">Edit User Profile</h3>
+                    <p id="edit-user-subtitle">Administrator profile & credentials management.</p>
+                </div>
+                <button class="close-btn" onclick="hideEditUserModal()">&times;</button>
+            </div>
+
+            <form id="edit-user-form" onsubmit="handleSaveUserEdit(event)" style="display: flex; flex-direction: column; gap: 1rem;">
+                <input type="hidden" id="edit-user-target-username">
+                
+                <div class="form-group">
+                    <label style="color: rgba(255,255,255,0.7); font-size:0.8rem">Full Display Name *</label>
+                    <input type="text" id="edit-user-display-name" class="form-input" required placeholder="e.g. John Doe">
+                </div>
+
+                <div class="form-group">
+                    <label style="color: rgba(255,255,255,0.7); font-size:0.8rem">Username / User ID *</label>
+                    <input type="text" id="edit-user-username" class="form-input" required placeholder="e.g. john_doe">
+                </div>
+
+                <div class="form-group">
+                    <label style="color: rgba(255,255,255,0.7); font-size:0.8rem">Work Email Address *</label>
+                    <input type="email" id="edit-user-email" class="form-input" required placeholder="e.g. john@zencorahs.com">
+                </div>
+
+                <div class="form-group">
+                    <label style="color: rgba(255,255,255,0.7); font-size:0.8rem">Mobile Number *</label>
+                    <input type="tel" id="edit-user-phone" class="form-input" required placeholder="e.g. +91 9876543210">
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div class="form-group">
+                        <label style="color: rgba(255,255,255,0.7); font-size:0.8rem">Role Authority</label>
+                        <select id="edit-user-role" class="form-input" style="background:#1B2430; color:#FFFFFF;">
+                            <option value="bde">BDE</option>
+                            <option value="admin">Administrator</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label style="color: rgba(255,255,255,0.7); font-size:0.8rem">Account Status</label>
+                        <select id="edit-user-status" class="form-input" style="background:#1B2430; color:#FFFFFF;">
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label style="color: rgba(255,255,255,0.7); font-size:0.8rem">Reset Password (Leave blank to keep unchanged)</label>
+                    <input type="password" id="edit-user-password" class="form-input" placeholder="Enter new password (optional)" autocomplete="new-password">
+                </div>
+
+                <div id="edit-user-error" style="display:none; color:#E74C3C; font-size:0.82rem; background:rgba(231,76,60,0.15); padding:8px; border-radius:4px;"></div>
+
+                <div style="display: flex; gap: 8px; margin-top: 0.5rem;">
+                    <button type="button" class="btn btn-secondary" onclick="hideEditUserModal()" style="flex: 1; justify-content: center;">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary" style="flex: 2; justify-content: center;">
+                        Save Changes
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -1949,6 +2034,7 @@
             </form>
         </div>
     </div>
+
 
 
     <!-- JavaScript Logic -->
@@ -2315,6 +2401,7 @@ info@zencorahs.com | www.zencorahs.com`
 
         // Change Password Modal Actions
         function openPasswordDrawer() {
+            hideProfileDrawer();
             document.getElementById('change-password-form').reset();
             document.getElementById('pwd-error-msg').style.display = 'none';
             document.getElementById('password-drawer').style.display = 'flex';
@@ -2671,6 +2758,7 @@ info@zencorahs.com | www.zencorahs.com`
         // MY PERSONAL PROFILE & AVATAR UPLOAD LOGIC
         // ----------------------------------------------------
         async function openProfileDrawer() {
+            hidePasswordDrawer();
             if (!currentSession) return;
             
             // Fetch fresh profile data from server
@@ -2699,13 +2787,15 @@ info@zencorahs.com | www.zencorahs.com`
             renderUserAvatar('profile-avatar-display', currentSession.avatar, currentSession.displayName);
             renderUserAvatar('user-avatar', currentSession.avatar, currentSession.displayName);
 
-            // If non-admin, load user's previous change requests
-            if (currentSession.role === 'bde') {
-                document.getElementById('prof-bde-request-box').style.display = 'flex';
-                loadUserChangeRequests();
-            } else {
+            // Display options based on role
+            if (currentSession.role === 'admin') {
+                document.getElementById('prof-admin-edit-box').style.display = 'block';
                 document.getElementById('prof-bde-request-box').style.display = 'none';
                 document.getElementById('prof-user-requests-container').style.display = 'none';
+            } else {
+                document.getElementById('prof-admin-edit-box').style.display = 'none';
+                document.getElementById('prof-bde-request-box').style.display = 'flex';
+                loadUserChangeRequests();
             }
 
             document.getElementById('profile-drawer').style.display = 'flex';
@@ -2855,7 +2945,7 @@ info@zencorahs.com | www.zencorahs.com`
         }
 
         // ----------------------------------------------------
-        // ADMIN-ONLY BDE ACCOUNTS & CHANGE REQUESTS CONTROLLER
+        // ADMIN-ONLY BDE ACCOUNTS & DIRECT EDIT CONTROLLER
         // ----------------------------------------------------
         function switchUserSubTab(tab) {
             const btnUsers = document.getElementById('tab-btn-users');
@@ -2902,15 +2992,20 @@ info@zencorahs.com | www.zencorahs.com`
                     ? `<span class="badge badge-lost">Inactive</span>` 
                     : `<span class="badge badge-won">Active</span>`;
                 
-                let actionsHtml = '';
-                if (u.username === 'ceo' || u.username === currentSession.username) {
-                    actionsHtml = `<span style="color:var(--text-muted); font-size:0.8rem">Active Account</span>`;
+                let actionsHtml = `
+                    <button type="button" class="btn btn-secondary" style="padding:4px 8px; font-size:0.75rem; margin-right:8px;" onclick="openEditUserModal('${u.username}')">
+                        ✏️ Edit
+                    </button>
+                `;
+
+                if (u.username.toLowerCase() === 'ceo' || u.username.toLowerCase() === currentSession.username.toLowerCase()) {
+                    actionsHtml += `<span style="color:var(--text-muted); font-size:0.75rem">(Active User)</span>`;
                 } else {
                     const toggleText = isInactive ? 'Re-activate' : 'Inactivate';
                     const toggleColor = isInactive ? '#27AE60' : '#E67E22';
-                    actionsHtml = `
-                        <a href="#" style="color:${toggleColor}; font-weight:600; text-decoration:none; margin-right:12px;" onclick="toggleUserStatus('${u.username}')">${toggleText}</a>
-                        <a href="#" style="color:#C0392B; font-weight:600; text-decoration:none;" onclick="deleteUser('${u.username}')">Remove BDE</a>
+                    actionsHtml += `
+                        <a href="#" style="color:${toggleColor}; font-weight:600; font-size:0.8rem; text-decoration:none; margin-right:10px;" onclick="toggleUserStatus('${u.username}')">${toggleText}</a>
+                        <a href="#" style="color:#C0392B; font-weight:600; font-size:0.8rem; text-decoration:none;" onclick="deleteUser('${u.username}')">Delete</a>
                     `;
                 }
 
@@ -2932,6 +3027,99 @@ info@zencorahs.com | www.zencorahs.com`
                 `;
                 tbody.appendChild(tr);
             });
+        }
+
+        // Admin Direct User Edit Modal Actions
+        function openEditUserModal(username) {
+            const userToEdit = users.find(u => u.username.toLowerCase() === username.toLowerCase()) || 
+                (currentSession.username.toLowerCase() === username.toLowerCase() ? currentSession : null);
+            if (!userToEdit) return;
+
+            document.getElementById('edit-user-form').reset();
+            document.getElementById('edit-user-error').style.display = 'none';
+            document.getElementById('edit-user-target-username').value = userToEdit.username;
+            document.getElementById('edit-user-display-name').value = userToEdit.displayName || '';
+            document.getElementById('edit-user-username').value = userToEdit.username || '';
+            document.getElementById('edit-user-email').value = userToEdit.email || '';
+            document.getElementById('edit-user-phone').value = userToEdit.phone || '';
+            document.getElementById('edit-user-role').value = userToEdit.role || 'bde';
+            document.getElementById('edit-user-status').value = userToEdit.status || 'active';
+            document.getElementById('edit-user-password').value = '';
+
+            document.getElementById('edit-user-title').innerText = `Edit Profile: ${userToEdit.displayName}`;
+            document.getElementById('edit-user-modal').style.display = 'flex';
+        }
+
+        function openAdminEditMyProfile() {
+            hideProfileDrawer();
+            openEditUserModal(currentSession.username);
+        }
+
+        function hideEditUserModal() {
+            document.getElementById('edit-user-modal').style.display = 'none';
+        }
+
+        function closeEditUserModal(e) {
+            if (e.target.id === 'edit-user-modal') hideEditUserModal();
+        }
+
+        async function handleSaveUserEdit(event) {
+            event.preventDefault();
+            const targetUsername = document.getElementById('edit-user-target-username').value;
+            const displayName = document.getElementById('edit-user-display-name').value.trim();
+            const newUsername = document.getElementById('edit-user-username').value.trim();
+            const email = document.getElementById('edit-user-email').value.trim();
+            const phone = document.getElementById('edit-user-phone').value.trim();
+            const role = document.getElementById('edit-user-role').value;
+            const status = document.getElementById('edit-user-status').value;
+            const newPassword = document.getElementById('edit-user-password').value.trim();
+            const errorBox = document.getElementById('edit-user-error');
+
+            errorBox.style.display = 'none';
+
+            try {
+                const response = await fetchWithAuth('/api/users/update', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        targetUsername,
+                        displayName,
+                        newUsername,
+                        email,
+                        phone,
+                        role,
+                        status,
+                        newPassword
+                    })
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    alert("User profile updated successfully!");
+                    hideEditUserModal();
+                    loadUsers();
+                    if (targetUsername.toLowerCase() === currentSession.username.toLowerCase()) {
+                        currentSession.displayName = displayName;
+                        currentSession.username = newUsername;
+                        currentSession.email = email;
+                        currentSession.phone = phone;
+                        currentSession.role = role;
+                        localStorage.setItem('zencora_displayName', displayName);
+                        localStorage.setItem('zencora_username', newUsername);
+                        localStorage.setItem('zencora_email', email);
+                        localStorage.setItem('zencora_phone', phone);
+                        localStorage.setItem('zencora_role', role);
+                        document.getElementById('user-display-name').innerText = displayName;
+                        document.getElementById('user-role-badge').innerText = role.toUpperCase();
+                    }
+                } else {
+                    errorBox.innerText = data.error || "Failed to update user.";
+                    errorBox.style.display = 'block';
+                }
+            } catch (err) {
+                errorBox.innerText = "Network error communicating with server.";
+                errorBox.style.display = 'block';
+            }
         }
 
         async function toggleUserStatus(username) {
