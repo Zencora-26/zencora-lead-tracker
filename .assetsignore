@@ -1,0 +1,14 @@
+_worker.js
+functions/
+.git/
+.gitignore
+.assetsignore
+wrangler.json
+server.py
+generate_lead_tracker.py
+run.bat
+__pycache__/
+*.py
+*.pyc
+*.bat
+*.xlsx
