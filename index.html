@@ -907,7 +907,176 @@
             border-radius: var(--border-radius-sm);
             display: none;
         }
-    </style>
+
+        /* Profile & Modal Glassmorphism Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1100;
+            padding: 1.5rem;
+        }
+        .modal-card {
+            width: 100%;
+            max-width: 520px;
+            background: #121A21;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 18px;
+            padding: 2rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+            color: #FFFFFF;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+            animation: fadeIn 0.3s ease;
+            position: relative;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+        .modal-title h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #FFFFFF;
+            margin-bottom: 4px;
+        }
+        .modal-title p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        /* Interactive Profile Styles */
+        .profile-avatar-container {
+            position: relative;
+            width: 88px;
+            height: 88px;
+            margin: 0 auto;
+            cursor: pointer;
+            border-radius: 50%;
+        }
+        .profile-avatar-img {
+            width: 88px;
+            height: 88px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--secondary);
+            background: #202b36;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #FFFFFF;
+        }
+        .avatar-upload-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.55);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: var(--transition);
+            color: #FFFFFF;
+            font-size: 0.7rem;
+            font-weight: 600;
+            gap: 2px;
+        }
+        .profile-avatar-container:hover .avatar-upload-overlay {
+            opacity: 1;
+        }
+        .profile-info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: var(--border-radius-md);
+            padding: 1rem;
+        }
+        .profile-field {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .profile-field-label {
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+        .profile-field-value {
+            font-size: 0.92rem;
+            color: #FFFFFF;
+            font-weight: 500;
+            word-break: break-all;
+        }
+        .profile-locked-badge {
+            font-size: 0.65rem;
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text-muted);
+            padding: 2px 6px;
+            border-radius: 4px;
+            display: inline-block;
+            margin-left: 6px;
+            font-weight: 500;
+        }
+
+        /* Tabs Pill Selector */
+        .subtab-pills {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 1.25rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.75rem;
+        }
+        .subtab-pill {
+            padding: 8px 16px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-muted);
+            border: 1px solid transparent;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .subtab-pill:hover {
+            color: #FFFFFF;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .subtab-pill.active {
+            background: var(--primary);
+            color: #FFFFFF;
+            border-color: var(--primary);
+        }
+        .count-pill {
+            background: rgba(255, 255, 255, 0.2);
+            color: #FFFFFF;
+            font-size: 0.75rem;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-weight: 700;
+        }
+
 </head>
 <body>
 
@@ -919,18 +1088,21 @@
                 <div class="login-subtitle">HEALTH SOLUTIONS</div>
             </div>
             
-            <p class="login-welcome">Enter your BDE credentials or Admin login to access the Lead Tracker.</p>
+            <p class="login-welcome">Sign in with your User ID, Work Email, or Registered Mobile Number.</p>
             
             <div class="login-error" id="login-error-message">Invalid credentials.</div>
             
             <div class="form-group">
-                <label style="color: rgba(255,255,255,0.7); font-size:0.8rem">Username</label>
-                <input type="text" id="login-username" class="login-input" required placeholder="e.g. john_doe" autofocus autocomplete="username">
+                <label style="color: rgba(255,255,255,0.7); font-size:0.8rem">User ID, Email, or Mobile Number</label>
+                <input type="text" id="login-username" class="login-input" required placeholder="e.g. ceo, ceo@zencorahs.com, +1 555-0100" autofocus autocomplete="username">
             </div>
 
-            <div class="form-group" style="margin-bottom: 0.5rem;">
-                <label style="color: rgba(255,255,255,0.7); font-size:0.8rem">Password</label>
-                <input type="password" id="login-password" class="login-input" required placeholder="••••••••" autocomplete="current-password">
+            <div class="form-group" style="margin-bottom: 0.25rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <label style="color: rgba(255,255,255,0.7); font-size:0.8rem">Password</label>
+                    <a href="#" onclick="openForgotPasswordModal(event)" style="color: #FF7675; font-size: 0.78rem; text-decoration: none; font-weight: 500;">Forgot Password?</a>
+                </div>
+                <input type="password" id="login-password" class="login-input" required placeholder="••••••••" autocomplete="current-password" style="margin-top: 4px;">
             </div>
 
             <button type="submit" class="login-btn">
@@ -939,6 +1111,64 @@
             </button>
         </form>
     </div>
+
+    <!-- FORGOT PASSWORD & OTP MODAL -->
+    <div id="forgot-password-modal" class="modal-overlay" onclick="closeForgotPasswordModal(event)">
+        <div class="modal-card" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <h3 id="fp-title">Reset Your Password</h3>
+                    <p id="fp-desc">Verify your identity via 6-digit OTP sent to your registered Email or Mobile.</p>
+                </div>
+                <button class="close-btn" onclick="hideForgotPasswordModal()">&times;</button>
+            </div>
+
+            <div id="fp-alert" class="login-error" style="display:none; text-align:left;"></div>
+
+            <!-- Step 1: Request OTP -->
+            <form id="fp-step-1" onsubmit="handleRequestOtp(event)" style="display: flex; flex-direction: column; gap: 1rem;">
+                <div class="form-group">
+                    <label style="color: rgba(255,255,255,0.7); font-size:0.8rem">Registered User ID, Email, or Mobile Number *</label>
+                    <input type="text" id="fp-identifier" class="form-input" required placeholder="e.g. Prakash_Zencora, prakash@zencorahs.com, +1 303-968-9512" autocomplete="off">
+                </div>
+                <button type="submit" id="btn-request-otp" class="btn btn-primary" style="justify-content: center; width: 100%;">
+                    Send 6-Digit OTP Code
+                </button>
+            </form>
+
+            <!-- Step 2: Verify OTP & Reset Password -->
+            <form id="fp-step-2" onsubmit="handleVerifyOtpAndReset(event)" style="display: none; flex-direction: column; gap: 1rem;">
+                <div id="fp-destination-banner" style="background: rgba(46, 204, 113, 0.12); border: 1px solid rgba(46, 204, 113, 0.3); border-radius: var(--border-radius-sm); padding: 10px 14px; font-size: 0.82rem; color: #2ECC71;">
+                    <!-- Destination dynamic text -->
+                </div>
+
+                <div class="form-group">
+                    <label style="color: rgba(255,255,255,0.7); font-size:0.8rem">6-Digit OTP Code *</label>
+                    <input type="text" id="fp-otp" class="form-input" required placeholder="e.g. 849201" maxlength="6" style="letter-spacing: 4px; font-size: 1.1rem; text-align: center; font-weight: 700;">
+                </div>
+
+                <div class="form-group">
+                    <label style="color: rgba(255,255,255,0.7); font-size:0.8rem">New Password *</label>
+                    <input type="password" id="fp-new-password" class="form-input" required placeholder="At least 4 characters" minlength="4">
+                </div>
+
+                <div class="form-group">
+                    <label style="color: rgba(255,255,255,0.7); font-size:0.8rem">Confirm New Password *</label>
+                    <input type="password" id="fp-confirm-password" class="form-input" required placeholder="Repeat new password" minlength="4">
+                </div>
+
+                <div style="display: flex; gap: 8px;">
+                    <button type="button" class="btn btn-secondary" onclick="backToFpStep1()" style="flex: 1; justify-content: center;">
+                        Back
+                    </button>
+                    <button type="submit" id="btn-reset-password" class="btn btn-primary" style="flex: 2; justify-content: center;">
+                        Set New Password
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
 
     <!-- 2. MAIN APPLICATION WORKSPACE -->
     <div class="app-container" id="app-workspace">
@@ -951,18 +1181,22 @@
             </div>
             
             <!-- User Status Profile Card -->
-            <div class="user-profile-badge" style="justify-content: space-between;">
+            <div class="user-profile-badge" style="justify-content: space-between; cursor: pointer;" onclick="openProfileDrawer()" title="View and manage personal profile">
                 <div style="display: flex; align-items: center; gap: 10px; overflow: hidden;">
-                    <div class="avatar-circle" id="user-avatar">-</div>
+                    <div class="avatar-circle" id="user-avatar" style="overflow: hidden; display: flex; align-items: center; justify-content: center;">-</div>
                     <div class="user-meta">
                         <span class="user-meta-name" id="user-display-name">Loading...</span>
-                        <span class="user-meta-role" id="user-role-badge">BDE</span>
+                        <div style="display: flex; align-items: center; gap: 4px;">
+                            <span class="user-meta-role" id="user-role-badge">BDE</span>
+                            <span style="font-size: 0.65rem; color: rgba(255,255,255,0.4);">• Profile</span>
+                        </div>
                     </div>
                 </div>
-                <button type="button" title="Change Password" onclick="openPasswordDrawer()" style="background:none; border:none; color:rgba(255,255,255,0.6); cursor:pointer; padding:4px; font-size:1.1rem; transition:var(--transition);" onmouseover="this.style.color='#FFFFFF'" onmouseout="this.style.color='rgba(255,255,255,0.6)'">
-                    🔑
+                <button type="button" title="My Profile & Security" onclick="event.stopPropagation(); openProfileDrawer();" style="background:none; border:none; color:rgba(255,255,255,0.6); cursor:pointer; padding:4px; font-size:1.1rem; transition:var(--transition);" onmouseover="this.style.color='#FFFFFF'" onmouseout="this.style.color='rgba(255,255,255,0.6)'">
+                    ⚙️
                 </button>
             </div>
+
             
             <ul class="nav-list">
                 <li class="nav-item active" onclick="switchView('view-spreadsheet', this)">
@@ -1298,61 +1532,122 @@
 
             <!-- PANEL 4: USER REGISTRIES (NEW - ADMIN ONLY) -->
             <div id="view-users" class="view-panel">
-                <div class="analytics-grid">
-                    <!-- User Registry List -->
-                    <div class="dashboard-card">
+                
+                <!-- Subtab Navigation -->
+                <div class="subtab-pills">
+                    <button type="button" class="subtab-pill active" id="tab-btn-users" onclick="switchUserSubTab('users')">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                        BDE User Accounts
+                    </button>
+                    <button type="button" class="subtab-pill" id="tab-btn-requests" onclick="switchUserSubTab('requests')">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
+                        Profile Change Requests
+                        <span id="pending-requests-badge" class="count-pill">0</span>
+                    </button>
+                </div>
+
+                <!-- SUBTAB 1: USER ACCOUNTS -->
+                <div id="subtab-users-content">
+                    <div class="analytics-grid">
+                        <!-- User Registry List -->
+                        <div class="dashboard-card" style="grid-column: span 2;">
+                            <div class="card-header">
+                                <div class="card-title">
+                                    <h3>Active Business Development Executives</h3>
+                                    <p>Configured BDE logins, contact records, and account statuses. Inactive accounts are blocked from accessing the system.</p>
+                                </div>
+                            </div>
+                            <div class="table-wrapper">
+                                <table class="leads-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Avatar</th>
+                                            <th>BDE Name & User ID</th>
+                                            <th>Email Address</th>
+                                            <th>Mobile Number</th>
+                                            <th>Role</th>
+                                            <th>Status</th>
+                                            <th style="text-align:center">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="users-tbody">
+                                        <!-- Populated by JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Create User Form -->
+                        <div class="dashboard-card" style="grid-column: span 2;">
+                            <div class="card-header">
+                                <div class="card-title">
+                                    <h3>Register New BDE Executive</h3>
+                                    <p>Creates secure credentials and registers required contact details for BDE access.</p>
+                                </div>
+                            </div>
+                            <form id="create-user-form" onsubmit="handleCreateUser(event)" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;" autocomplete="off">
+                                <div class="form-group">
+                                    <label for="new-display-name">BDE Full Display Name *</label>
+                                    <input type="text" id="new-display-name" class="form-input" required placeholder="e.g. Sarah Connor" autocomplete="off" spellcheck="false">
+                                </div>
+                                <div class="form-group">
+                                    <label for="new-username">Username / User ID *</label>
+                                    <input type="text" id="new-username" class="form-input" required placeholder="e.g. sarah_c" autocomplete="off" spellcheck="false">
+                                </div>
+                                <div class="form-group">
+                                    <label for="new-email">Work Email Address *</label>
+                                    <input type="email" id="new-email" class="form-input" required placeholder="e.g. sarah@zencorahs.com" autocomplete="off" spellcheck="false">
+                                </div>
+                                <div class="form-group">
+                                    <label for="new-phone">Mobile / Direct Phone *</label>
+                                    <input type="tel" id="new-phone" class="form-input" required placeholder="e.g. +1 555-0192" autocomplete="off" spellcheck="false">
+                                </div>
+                                <div class="form-group" style="grid-column: span 2;">
+                                    <label for="new-password">Initial Password *</label>
+                                    <input type="password" id="new-password" class="form-input" required placeholder="At least 4 characters" minlength="4" autocomplete="off" spellcheck="false">
+                                </div>
+                                <div style="grid-column: span 2;">
+                                    <button type="submit" class="btn btn-primary" style="justify-content: center; width: 100%;">
+                                        Register BDE Credentials
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SUBTAB 2: PROFILE CHANGE REQUESTS -->
+                <div id="subtab-requests-content" style="display: none;">
+                    <div class="dashboard-card" style="width: 100%;">
                         <div class="card-header">
                             <div class="card-title">
-                                <h3>Active Business Development Executives</h3>
-                                <p>Configured BDE logins and account statuses. Inactive accounts are blocked from accessing the system.</p>
+                                <h3>BDE Personal Information Change Requests</h3>
+                                <p>Submitted contact update requests from BDEs. Approving a request will automatically update the user's master record.</p>
                             </div>
                         </div>
                         <div class="table-wrapper">
                             <table class="leads-table">
                                 <thead>
                                     <tr>
-                                        <th>Username</th>
-                                        <th>BDE Display Name</th>
-                                        <th>Role Authority</th>
-                                        <th>Account Status</th>
-                                        <th style="text-align:center">Actions</th>
+                                        <th>Request ID</th>
+                                        <th>User Account</th>
+                                        <th>Requested Updates</th>
+                                        <th>Reason / Note</th>
+                                        <th>Submitted Date</th>
+                                        <th>Status</th>
+                                        <th style="text-align:center">Admin Actions</th>
                                     </tr>
                                 </thead>
-                                <tbody id="users-tbody">
+                                <tbody id="requests-tbody">
                                     <!-- Populated by JS -->
                                 </tbody>
                             </table>
                         </div>
                     </div>
-
-                    <!-- Create User Form -->
-                    <div class="dashboard-card">
-                        <div class="card-header">
-                            <div class="card-title">
-                                <h3>Register New BDE Executive</h3>
-                                <p>Creates secure credentials allowing the BDE to login and manage isolated leads.</p>
-                            </div>
-                        </div>
-                        <form id="create-user-form" onsubmit="handleCreateUser(event)" style="display: flex; flex-direction: column; gap: 1.25rem;" autocomplete="off">
-                            <div class="form-group">
-                                <label for="new-display-name">BDE Full Display Name *</label>
-                                <input type="text" id="new-display-name" class="form-input" required placeholder="e.g. Sarah Connor" autocomplete="off" spellcheck="false">
-                            </div>
-                            <div class="form-group">
-                                <label for="new-username">Username *</label>
-                                <input type="text" id="new-username" class="form-input" required placeholder="e.g. sarah_c" autocomplete="off" spellcheck="false">
-                            </div>
-                            <div class="form-group">
-                                <label for="new-password">Password *</label>
-                                <input type="password" id="new-password" class="form-input" required placeholder="Password" autocomplete="off" spellcheck="false">
-                            </div>
-                            <button type="submit" class="btn btn-primary" style="justify-content: center;">
-                                Create BDE Credentials
-                            </button>
-                        </form>
-                    </div>
                 </div>
+
             </div>
+
 
         </main>
         
@@ -1532,13 +1827,129 @@
                 
                 <div id="pwd-error-msg" style="display:none; color:#E74C3C; font-size:0.85rem; font-weight:600; background-color:#FADBD8; padding:8px 12px; border-radius:4px;"></div>
                 
-                <div class="form-actions">
-                    <button type="button" class="btn btn-secondary" onclick="hidePasswordDrawer()">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Update Password</button>
+    <!-- MY PERSONAL PROFILE DRAWER -->
+    <div id="profile-drawer" class="drawer-overlay" onclick="closeProfileDrawer(event)">
+        <div class="drawer" onclick="event.stopPropagation()" style="width: 480px;">
+            <div class="drawer-header">
+                <h3>My Personal Profile</h3>
+                <button class="close-btn" onclick="hideProfileDrawer()">&times;</button>
+            </div>
+            
+            <div style="display: flex; flex-direction: column; gap: 1.5rem; margin-top: 1rem;">
+                <!-- Avatar Section -->
+                <div style="text-align: center;">
+                    <div class="profile-avatar-container" onclick="document.getElementById('avatar-file-input').click()" title="Click to upload profile photo">
+                        <div id="profile-avatar-display" class="profile-avatar-img">-</div>
+                        <div class="avatar-upload-overlay">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                            <span>Change</span>
+                        </div>
+                    </div>
+                    <input type="file" id="avatar-file-input" accept="image/*" style="display:none;" onchange="handleAvatarUpload(event)">
+                    <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 6px;">
+                        Click avatar to upload / update your photo (PNG/JPG)
+                    </div>
+                </div>
+
+                <!-- Profile Info Grid -->
+                <div class="profile-info-grid">
+                    <div class="profile-field">
+                        <span class="profile-field-label">Full Name</span>
+                        <span class="profile-field-value" id="prof-display-name">-</span>
+                    </div>
+                    <div class="profile-field">
+                        <span class="profile-field-label">User ID / Username <span class="profile-locked-badge">Locked</span></span>
+                        <span class="profile-field-value" id="prof-username">-</span>
+                    </div>
+                    <div class="profile-field" style="grid-column: span 2;">
+                        <span class="profile-field-label">Registered Work Email</span>
+                        <span class="profile-field-value" id="prof-email">-</span>
+                    </div>
+                    <div class="profile-field">
+                        <span class="profile-field-label">Mobile Number</span>
+                        <span class="profile-field-value" id="prof-phone">-</span>
+                    </div>
+                    <div class="profile-field">
+                        <span class="profile-field-label">Role Authority</span>
+                        <span class="profile-field-value" id="prof-role">-</span>
+                    </div>
+                </div>
+
+                <!-- Non-Admin Request Change Banner -->
+                <div id="prof-bde-request-box" style="background: rgba(41, 128, 185, 0.08); border: 1px solid rgba(41, 128, 185, 0.2); border-radius: var(--border-radius-md); padding: 1rem; display: flex; flex-direction: column; gap: 8px;">
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <span style="font-size: 0.85rem; font-weight: 600; color: #3498DB;">Request Contact Info Change</span>
+                        <span style="font-size: 0.72rem; color: var(--text-muted);">Admin Verified</span>
+                    </div>
+                    <p style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.4;">
+                        Your name, email, and mobile are verified credentials. Need to update your contact details? Submit a change request to the administrator.
+                    </p>
+                    <button type="button" class="btn btn-secondary" onclick="openRequestChangeModal()" style="justify-content: center; font-size: 0.85rem; padding: 8px 12px; margin-top: 4px;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        Submit Change Request
+                    </button>
+                </div>
+
+                <!-- User's My Requests Status List -->
+                <div id="prof-user-requests-container" style="display: none;">
+                    <h4 style="font-size: 0.85rem; color: var(--text-dark); margin-bottom: 8px;">My Recent Update Requests:</h4>
+                    <div id="prof-user-requests-list" style="display: flex; flex-direction: column; gap: 6px; font-size: 0.8rem;"></div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div style="display: flex; gap: 8px; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+                    <button type="button" class="btn btn-secondary" onclick="hideProfileDrawer(); openPasswordDrawer();" style="flex: 1; justify-content: center;">
+                        🔑 Change Password
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="hideProfileDrawer()" style="flex: 1; justify-content: center;">
+                        Done
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- REQUEST INFORMATION UPDATE MODAL -->
+    <div id="change-request-modal" class="modal-overlay" onclick="closeRequestChangeModal(event)">
+        <div class="modal-card" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <h3>Request Profile Information Update</h3>
+                    <p>Enter the updated contact details you would like your administrator to apply.</p>
+                </div>
+                <button class="close-btn" onclick="hideRequestChangeModal()">&times;</button>
+            </div>
+
+            <form id="change-request-form" onsubmit="handleSubmitChangeRequest(event)" style="display: flex; flex-direction: column; gap: 1.1rem;">
+                <div class="form-group">
+                    <label style="color: rgba(255,255,255,0.7); font-size:0.8rem">New Full Display Name (Optional)</label>
+                    <input type="text" id="req-display-name" class="form-input" placeholder="Leave blank if unchanged" autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label style="color: rgba(255,255,255,0.7); font-size:0.8rem">New Work Email Address (Optional)</label>
+                    <input type="email" id="req-email" class="form-input" placeholder="Leave blank if unchanged" autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label style="color: rgba(255,255,255,0.7); font-size:0.8rem">New Mobile Number (Optional)</label>
+                    <input type="tel" id="req-phone" class="form-input" placeholder="Leave blank if unchanged" autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label style="color: rgba(255,255,255,0.7); font-size:0.8rem">Reason / Note for Administrator *</label>
+                    <textarea id="req-reason" class="form-input" required placeholder="e.g. Changed company phone number or updated surname" style="height: 70px; resize: vertical;"></textarea>
+                </div>
+
+                <div style="display: flex; gap: 8px;">
+                    <button type="button" class="btn btn-secondary" onclick="hideRequestChangeModal()" style="flex: 1; justify-content: center;">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary" style="flex: 2; justify-content: center;">
+                        Send Request to Admin
+                    </button>
                 </div>
             </form>
         </div>
     </div>
+
 
     <!-- JavaScript Logic -->
     <script>
@@ -1965,16 +2376,30 @@ info@zencorahs.com | www.zencorahs.com`
         });
 
         // ----------------------------------------------------
-        // AUTHENTICATION AND SESSION LOGIC (NEW)
+        // AUTHENTICATION AND SESSION LOGIC (MULTI-IDENTIFIER + OTP)
         // ----------------------------------------------------
+        function renderUserAvatar(elementId, avatarUrl, displayName) {
+            const el = document.getElementById(elementId);
+            if (!el) return;
+            if (avatarUrl && avatarUrl.trim()) {
+                el.innerHTML = `<img src="${avatarUrl}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" alt="Avatar">`;
+            } else {
+                const initial = (displayName || 'User').charAt(0).toUpperCase();
+                el.innerHTML = initial;
+            }
+        }
+
         function checkSession() {
             const token = localStorage.getItem('zencora_token');
             const username = localStorage.getItem('zencora_username');
             const role = localStorage.getItem('zencora_role');
             const displayName = localStorage.getItem('zencora_displayName');
+            const email = localStorage.getItem('zencora_email') || '';
+            const phone = localStorage.getItem('zencora_phone') || '';
+            const avatar = localStorage.getItem('zencora_avatar') || '';
 
             if (token && username && role && displayName) {
-                currentSession = { token, username, role, displayName };
+                currentSession = { token, username, role, displayName, email, phone, avatar };
                 
                 // Show App Workspace, Hide Login
                 document.getElementById('login-overlay').style.display = 'none';
@@ -1982,7 +2407,8 @@ info@zencorahs.com | www.zencorahs.com`
                 
                 // Populate profile card
                 document.getElementById('user-display-name').innerText = displayName;
-                document.getElementById('user-avatar').innerText = displayName.charAt(0);
+                renderUserAvatar('user-avatar', avatar, displayName);
+
                 const roleBadge = document.getElementById('user-role-badge');
                 roleBadge.innerText = role;
                 if (role === 'bde') {
@@ -1998,6 +2424,12 @@ info@zencorahs.com | www.zencorahs.com`
                 loadLeads();
                 renderObjections();
                 setupEditableTableEvents();
+
+                // If Admin, load users & pending requests count
+                if (role === 'admin') {
+                    loadUsers();
+                    loadProfileRequests();
+                }
             } else {
                 // Show Login, Hide App
                 document.getElementById('login-overlay').style.display = 'flex';
@@ -2024,10 +2456,6 @@ info@zencorahs.com | www.zencorahs.com`
             } else {
                 bdeGroup.style.display = 'flex';
             }
-
-            // 4. Bulk import button - restrict or let both import? BDE can import, it gets auto-assigned.
-            // BDE performance card - hide for BDE if wanted, or let it show only their stats.
-            // The charts will dynamically calculate based on loaded data.
         }
 
         // Custom AJAX fetch wrapper adding auth token
@@ -2053,11 +2481,11 @@ info@zencorahs.com | www.zencorahs.com`
             }
         }
 
-        // Handle Login POST
+        // Handle Login POST (Supports User ID, Email, or Mobile)
         async function handleLogin(event) {
             event.preventDefault();
-            const usernameInput = document.getElementById('login-username').value;
-            const passwordInput = document.getElementById('login-password').value;
+            const identifier = document.getElementById('login-username').value.trim();
+            const password = document.getElementById('login-password').value.trim();
             const errorMsg = document.getElementById('login-error-message');
 
             errorMsg.style.display = 'none';
@@ -2066,7 +2494,7 @@ info@zencorahs.com | www.zencorahs.com`
                 const response = await fetch('/api/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username: usernameInput, password: passwordInput })
+                    body: JSON.stringify({ identifier, password })
                 });
 
                 if (response.ok) {
@@ -2077,6 +2505,9 @@ info@zencorahs.com | www.zencorahs.com`
                     localStorage.setItem('zencora_username', data.username);
                     localStorage.setItem('zencora_role', data.role);
                     localStorage.setItem('zencora_displayName', data.displayName);
+                    localStorage.setItem('zencora_email', data.email || '');
+                    localStorage.setItem('zencora_phone', data.phone || '');
+                    localStorage.setItem('zencora_avatar', data.avatar || '');
 
                     checkSession();
                 } else {
@@ -2094,7 +2525,6 @@ info@zencorahs.com | www.zencorahs.com`
         async function handleLogout() {
             if (currentSession) {
                 try {
-                    // Fire-and-forget logout on server
                     fetch('/api/logout', {
                         method: 'POST',
                         headers: { 'Authorization': `Bearer ${currentSession.token}` }
@@ -2102,18 +2532,351 @@ info@zencorahs.com | www.zencorahs.com`
                 } catch(e){}
             }
 
-            // Clear cache
             localStorage.removeItem('zencora_token');
             localStorage.removeItem('zencora_username');
             localStorage.removeItem('zencora_role');
             localStorage.removeItem('zencora_displayName');
+            localStorage.removeItem('zencora_email');
+            localStorage.removeItem('zencora_phone');
+            localStorage.removeItem('zencora_avatar');
 
             checkSession();
         }
 
         // ----------------------------------------------------
-        // ADMIN-ONLY BDE ACCOUNTS CREATOR LOGIC (NEW)
+        // FORGOT PASSWORD WITH OTP VERIFICATION
         // ----------------------------------------------------
+        let fpActiveIdentifier = '';
+
+        function openForgotPasswordModal(e) {
+            if (e) e.preventDefault();
+            fpActiveIdentifier = '';
+            document.getElementById('fp-step-1').reset();
+            document.getElementById('fp-step-2').reset();
+            document.getElementById('fp-step-1').style.display = 'flex';
+            document.getElementById('fp-step-2').style.display = 'none';
+            document.getElementById('fp-alert').style.display = 'none';
+            document.getElementById('fp-title').innerText = "Reset Your Password";
+            document.getElementById('fp-desc').innerText = "Verify your identity via 6-digit OTP sent to your registered Email or Mobile.";
+            document.getElementById('forgot-password-modal').style.display = 'flex';
+        }
+
+        function hideForgotPasswordModal() {
+            document.getElementById('forgot-password-modal').style.display = 'none';
+        }
+
+        function closeForgotPasswordModal(e) {
+            if (e.target.id === 'forgot-password-modal') hideForgotPasswordModal();
+        }
+
+        function backToFpStep1() {
+            document.getElementById('fp-step-1').style.display = 'flex';
+            document.getElementById('fp-step-2').style.display = 'none';
+            document.getElementById('fp-alert').style.display = 'none';
+        }
+
+        async function handleRequestOtp(event) {
+            event.preventDefault();
+            const identifier = document.getElementById('fp-identifier').value.trim();
+            const alertBox = document.getElementById('fp-alert');
+            const submitBtn = document.getElementById('btn-request-otp');
+
+            alertBox.style.display = 'none';
+            submitBtn.disabled = true;
+            submitBtn.innerText = "Generating Code...";
+
+            try {
+                const response = await fetch('/api/forgot-password/request', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ identifier })
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    fpActiveIdentifier = identifier;
+                    document.getElementById('fp-step-1').style.display = 'none';
+                    document.getElementById('fp-step-2').style.display = 'flex';
+                    
+                    let bannerHtml = `<strong>OTP Verification:</strong> ${data.message}`;
+                    if (data.otpDev) {
+                        bannerHtml += `<div style="margin-top:6px; font-weight:700; color:#27AE60; background:rgba(39,174,96,0.15); padding:4px 8px; border-radius:4px; display:inline-block;">⚡ Verification Code: ${data.otpDev}</div>`;
+                    }
+                    document.getElementById('fp-destination-banner').innerHTML = bannerHtml;
+                } else {
+                    alertBox.innerText = data.error || "Could not find registered account.";
+                    alertBox.style.display = 'block';
+                }
+            } catch (err) {
+                alertBox.innerText = "Network error. Server may be offline.";
+                alertBox.style.display = 'block';
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerText = "Send 6-Digit OTP Code";
+            }
+        }
+
+        async function handleVerifyOtpAndReset(event) {
+            event.preventDefault();
+            const otp = document.getElementById('fp-otp').value.trim();
+            const newPassword = document.getElementById('fp-new-password').value.trim();
+            const confirmPassword = document.getElementById('fp-confirm-password').value.trim();
+            const alertBox = document.getElementById('fp-alert');
+            const submitBtn = document.getElementById('btn-reset-password');
+
+            alertBox.style.display = 'none';
+
+            if (newPassword !== confirmPassword) {
+                alertBox.innerText = "New passwords do not match.";
+                alertBox.style.display = 'block';
+                return;
+            }
+
+            if (newPassword.length < 4) {
+                alertBox.innerText = "Password must be at least 4 characters.";
+                alertBox.style.display = 'block';
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.innerText = "Updating Password...";
+
+            try {
+                const response = await fetch('/api/forgot-password/reset', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ identifier: fpActiveIdentifier, otp, newPassword })
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    alert("Password reset successfully! You can now log in with your new password.");
+                    hideForgotPasswordModal();
+                    document.getElementById('login-username').value = fpActiveIdentifier;
+                    document.getElementById('login-password').value = '';
+                } else {
+                    alertBox.innerText = data.error || "Failed to reset password.";
+                    alertBox.style.display = 'block';
+                }
+            } catch (err) {
+                alertBox.innerText = "Network error communicating with server.";
+                alertBox.style.display = 'block';
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerText = "Set New Password";
+            }
+        }
+
+        // ----------------------------------------------------
+        // MY PERSONAL PROFILE & AVATAR UPLOAD LOGIC
+        // ----------------------------------------------------
+        async function openProfileDrawer() {
+            if (!currentSession) return;
+            
+            // Fetch fresh profile data from server
+            try {
+                const response = await fetchWithAuth('/api/profile');
+                if (response.ok) {
+                    const profile = await response.json();
+                    currentSession.email = profile.email || '';
+                    currentSession.phone = profile.phone || '';
+                    currentSession.avatar = profile.avatar || '';
+                    currentSession.displayName = profile.displayName || currentSession.displayName;
+
+                    localStorage.setItem('zencora_email', currentSession.email);
+                    localStorage.setItem('zencora_phone', currentSession.phone);
+                    localStorage.setItem('zencora_avatar', currentSession.avatar);
+                    localStorage.setItem('zencora_displayName', currentSession.displayName);
+                }
+            } catch (e) {}
+
+            document.getElementById('prof-display-name').innerText = currentSession.displayName;
+            document.getElementById('prof-username').innerText = currentSession.username;
+            document.getElementById('prof-email').innerText = currentSession.email || 'Not Configured';
+            document.getElementById('prof-phone').innerText = currentSession.phone || 'Not Configured';
+            document.getElementById('prof-role').innerText = currentSession.role.toUpperCase();
+
+            renderUserAvatar('profile-avatar-display', currentSession.avatar, currentSession.displayName);
+            renderUserAvatar('user-avatar', currentSession.avatar, currentSession.displayName);
+
+            // If non-admin, load user's previous change requests
+            if (currentSession.role === 'bde') {
+                document.getElementById('prof-bde-request-box').style.display = 'flex';
+                loadUserChangeRequests();
+            } else {
+                document.getElementById('prof-bde-request-box').style.display = 'none';
+                document.getElementById('prof-user-requests-container').style.display = 'none';
+            }
+
+            document.getElementById('profile-drawer').style.display = 'flex';
+        }
+
+        function hideProfileDrawer() {
+            document.getElementById('profile-drawer').style.display = 'none';
+        }
+
+        function closeProfileDrawer(e) {
+            if (e.target.id === 'profile-drawer') hideProfileDrawer();
+        }
+
+        // Client-side instant image resize & upload
+        async function handleAvatarUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            if (!file.type.startsWith('image/')) {
+                alert("Please select a valid image file (PNG, JPG, or WEBP).");
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = async function() {
+                    // Create offscreen canvas for max 200x200 crop/compression
+                    const canvas = document.createElement('canvas');
+                    const size = 200;
+                    canvas.width = size;
+                    canvas.height = size;
+                    const ctx = canvas.getContext('2d');
+
+                    // Center crop square
+                    const minDim = Math.min(img.width, img.height);
+                    const sx = (img.width - minDim) / 2;
+                    const sy = (img.height - minDim) / 2;
+                    ctx.drawImage(img, sx, sy, minDim, minDim, 0, 0, size, size);
+
+                    const base64Data = canvas.toDataURL('image/jpeg', 0.85);
+
+                    try {
+                        const response = await fetchWithAuth('/api/profile/avatar', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ avatar: base64Data })
+                        });
+
+                        if (response.ok) {
+                            currentSession.avatar = base64Data;
+                            localStorage.setItem('zencora_avatar', base64Data);
+                            renderUserAvatar('profile-avatar-display', base64Data, currentSession.displayName);
+                            renderUserAvatar('user-avatar', base64Data, currentSession.displayName);
+                            alert("Profile picture updated successfully!");
+                        } else {
+                            alert("Failed to save avatar image.");
+                        }
+                    } catch (err) {
+                        alert("Network error updating profile photo.");
+                    }
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // ----------------------------------------------------
+        // PROFILE CHANGE REQUESTS WORKFLOW
+        // ----------------------------------------------------
+        function openRequestChangeModal() {
+            document.getElementById('change-request-form').reset();
+            document.getElementById('req-display-name').placeholder = currentSession.displayName;
+            document.getElementById('req-email').placeholder = currentSession.email || 'e.g. name@zencorahs.com';
+            document.getElementById('req-phone').placeholder = currentSession.phone || 'e.g. +1 555-0100';
+            document.getElementById('change-request-modal').style.display = 'flex';
+        }
+
+        function hideRequestChangeModal() {
+            document.getElementById('change-request-modal').style.display = 'none';
+        }
+
+        function closeRequestChangeModal(e) {
+            if (e.target.id === 'change-request-modal') hideRequestChangeModal();
+        }
+
+        async function handleSubmitChangeRequest(event) {
+            event.preventDefault();
+            const displayName = document.getElementById('req-display-name').value.trim();
+            const email = document.getElementById('req-email').value.trim();
+            const phone = document.getElementById('req-phone').value.trim();
+            const reason = document.getElementById('req-reason').value.trim();
+
+            if (!displayName && !email && !phone) {
+                alert("Please fill in at least one field you would like to change.");
+                return;
+            }
+
+            try {
+                const response = await fetchWithAuth('/api/profile-requests', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ displayName, email, phone, reason })
+                });
+
+                if (response.ok) {
+                    alert("Change request submitted to Administrator for review!");
+                    hideRequestChangeModal();
+                    loadUserChangeRequests();
+                } else {
+                    const err = await response.json();
+                    alert(`Error: ${err.error}`);
+                }
+            } catch (e) {
+                alert("Failed to submit request.");
+            }
+        }
+
+        async function loadUserChangeRequests() {
+            try {
+                const response = await fetchWithAuth('/api/profile-requests');
+                if (response.ok) {
+                    const requests = await response.json();
+                    const container = document.getElementById('prof-user-requests-container');
+                    const list = document.getElementById('prof-user-requests-list');
+                    if (!requests || requests.length === 0) {
+                        container.style.display = 'none';
+                        return;
+                    }
+                    container.style.display = 'block';
+                    list.innerHTML = '';
+                    requests.slice(0, 3).forEach(r => {
+                        const statusColor = r.status === 'approved' ? '#2ECC71' : (r.status === 'rejected' ? '#E74C3C' : '#F39C12');
+                        const item = document.createElement('div');
+                        item.style.cssText = "background:rgba(255,255,255,0.03); padding:8px 10px; border-radius:6px; border:1px solid rgba(255,255,255,0.08); display:flex; justify-content:space-between; align-items:center;";
+                        item.innerHTML = `
+                            <div>
+                                <span style="font-weight:600; color:#FFFFFF;">${r.id}</span>
+                                <span style="color:var(--text-muted); font-size:0.75rem; margin-left:6px;">(${r.reason})</span>
+                            </div>
+                            <span style="color:${statusColor}; font-weight:700; text-transform:uppercase; font-size:0.72rem;">${r.status}</span>
+                        `;
+                        list.appendChild(item);
+                    });
+                }
+            } catch(e) {}
+        }
+
+        // ----------------------------------------------------
+        // ADMIN-ONLY BDE ACCOUNTS & CHANGE REQUESTS CONTROLLER
+        // ----------------------------------------------------
+        function switchUserSubTab(tab) {
+            const btnUsers = document.getElementById('tab-btn-users');
+            const btnReqs = document.getElementById('tab-btn-requests');
+            const contentUsers = document.getElementById('subtab-users-content');
+            const contentReqs = document.getElementById('subtab-requests-content');
+
+            if (tab === 'users') {
+                btnUsers.classList.add('active');
+                btnReqs.classList.remove('active');
+                contentUsers.style.display = 'block';
+                contentReqs.style.display = 'none';
+            } else {
+                btnUsers.classList.remove('active');
+                btnReqs.classList.add('active');
+                contentUsers.style.display = 'none';
+                contentReqs.style.display = 'block';
+                loadProfileRequests();
+            }
+        }
+
         async function loadUsers() {
             if (currentSession.role !== 'admin') return;
 
@@ -2151,9 +2914,18 @@ info@zencorahs.com | www.zencorahs.com`
                     `;
                 }
 
+                const avatarHtml = u.avatar && u.avatar.trim() 
+                    ? `<img src="${u.avatar}" style="width:32px; height:32px; border-radius:50%; object-fit:cover; border:1px solid var(--secondary);" alt="${u.displayName}">`
+                    : `<div style="width:32px; height:32px; border-radius:50%; background:#202B36; color:#FFF; font-weight:700; display:flex; align-items:center; justify-content:center; font-size:0.85rem;">${u.displayName.charAt(0)}</div>`;
+
                 tr.innerHTML = `
-                    <td style="font-weight:600; color:var(--secondary)">${u.username}</td>
-                    <td>${u.displayName}</td>
+                    <td style="width:40px;">${avatarHtml}</td>
+                    <td>
+                        <div style="font-weight:600; color:#FFFFFF;">${u.displayName}</div>
+                        <div style="font-size:0.75rem; color:var(--text-muted);">@${u.username}</div>
+                    </td>
+                    <td><span style="font-family:monospace; color:#3498DB;">${u.email || '-'}</span></td>
+                    <td><span>${u.phone || '-'}</span></td>
                     <td><span class="badge ${u.role === 'admin' ? 'badge-sourced' : 'badge-demo'}">${u.role}</span></td>
                     <td>${statusBadge}</td>
                     <td style="text-align:center">${actionsHtml}</td>
@@ -2187,20 +2959,22 @@ info@zencorahs.com | www.zencorahs.com`
             event.preventDefault();
             const displayName = document.getElementById('new-display-name').value.trim();
             const username = document.getElementById('new-username').value.trim();
+            const email = document.getElementById('new-email').value.trim();
+            const phone = document.getElementById('new-phone').value.trim();
             const password = document.getElementById('new-password').value.trim();
 
             try {
                 const response = await fetchWithAuth('/api/users', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ displayName, username, password })
+                    body: JSON.stringify({ displayName, username, email, phone, password })
                 });
 
                 if (response.ok) {
-                    alert(`Successfully created BDE login account for ${displayName}!`);
+                    alert(`Successfully registered BDE login account for ${displayName}!`);
                     document.getElementById('create-user-form').reset();
                     loadUsers();
-                    loadLeads(); // Reload to capture BDE filters
+                    loadLeads();
                 } else {
                     const errData = await response.json();
                     alert(`Error creating account: ${errData.error}`);
@@ -2229,6 +3003,102 @@ info@zencorahs.com | www.zencorahs.com`
                 }
             }
         }
+
+        // Profile Change Requests Admin Management
+        async function loadProfileRequests() {
+            if (currentSession.role !== 'admin') return;
+
+            try {
+                const response = await fetchWithAuth('/api/profile-requests');
+                if (response.ok) {
+                    const requests = await response.json();
+                    renderProfileRequestsTable(requests);
+                }
+            } catch(e) {}
+        }
+
+        function renderProfileRequestsTable(requests) {
+            const tbody = document.getElementById('requests-tbody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            const pendingCount = requests.filter(r => r.status === 'pending').length;
+            const badge = document.getElementById('pending-requests-badge');
+            if (badge) badge.innerText = pendingCount;
+
+            if (requests.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--text-muted); padding:2rem;">No profile change requests found.</td></tr>`;
+                return;
+            }
+
+            requests.forEach(r => {
+                const tr = document.createElement('tr');
+                const isPending = r.status === 'pending';
+                const statusBadge = isPending 
+                    ? `<span class="badge badge-pitched">Pending</span>` 
+                    : (r.status === 'approved' ? `<span class="badge badge-won">Approved</span>` : `<span class="badge badge-lost">Rejected</span>`);
+
+                let diffHtml = [];
+                if (r.requestedName && r.requestedName !== r.currentName) {
+                    diffHtml.push(`<div><strong>Name:</strong> <span style="color:#2ECC71;">${r.requestedName}</span></div>`);
+                }
+                if (r.requestedEmail && r.requestedEmail !== r.currentEmail) {
+                    diffHtml.push(`<div><strong>Email:</strong> <span style="color:#2ECC71;">${r.requestedEmail}</span></div>`);
+                }
+                if (r.requestedPhone && r.requestedPhone !== r.currentPhone) {
+                    diffHtml.push(`<div><strong>Mobile:</strong> <span style="color:#2ECC71;">${r.requestedPhone}</span></div>`);
+                }
+
+                let actionsHtml = '';
+                if (isPending) {
+                    actionsHtml = `
+                        <div style="display:flex; gap:8px; justify-content:center;">
+                            <button type="button" class="btn btn-primary" style="padding:4px 10px; font-size:0.78rem;" onclick="reviewProfileRequest('${r.id}', 'approve')">Approve</button>
+                            <button type="button" class="btn btn-secondary" style="padding:4px 10px; font-size:0.78rem; border-color:#E74C3C; color:#E74C3C;" onclick="reviewProfileRequest('${r.id}', 'reject')">Reject</button>
+                        </div>
+                    `;
+                } else {
+                    actionsHtml = `<span style="font-size:0.75rem; color:var(--text-muted);">${r.reviewedBy ? 'Reviewed by @' + r.reviewedBy : 'Resolved'}</span>`;
+                }
+
+                const dateStr = r.createdAt ? new Date(r.createdAt).toLocaleDateString() : '-';
+
+                tr.innerHTML = `
+                    <td style="font-weight:600; color:#3498DB;">${r.id}</td>
+                    <td><strong style="color:#FFFFFF;">@${r.username}</strong></td>
+                    <td style="font-size:0.82rem;">${diffHtml.join('') || '<span style="color:var(--text-muted);">No changes</span>'}</td>
+                    <td style="font-size:0.82rem; color:var(--text-muted); max-width:200px;">${r.reason}</td>
+                    <td style="font-size:0.8rem;">${dateStr}</td>
+                    <td>${statusBadge}</td>
+                    <td style="text-align:center;">${actionsHtml}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        async function reviewProfileRequest(requestId, action) {
+            const comment = prompt(`Enter optional note for ${action.toUpperCase()}ING request ${requestId}:`, action === 'approve' ? 'Approved by Admin' : 'Information mismatch') || '';
+
+            try {
+                const response = await fetchWithAuth('/api/profile-requests/review', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ requestId, action, comment })
+                });
+
+                if (response.ok) {
+                    alert(`Request ${requestId} has been ${action.toUpperCase()}ED!`);
+                    loadProfileRequests();
+                    loadUsers(); // Refresh user table to reflect updated info
+                } else {
+                    const err = await response.json();
+                    alert(`Error: ${err.error}`);
+                }
+            } catch (e) {
+                alert("Failed to review request.");
+            }
+        }
+
 
         // ----------------------------------------------------
         // ORIGINAL LEADS DATABASE LOGIC

@@ -1,30 +1,42 @@
 [
-    {
-        "username": "ceo",
-        "passwordHash": "4445d328252601d795228de88d097ffd6688f7b8de88de62c698317d9a7e2abe",
-        "role": "admin",
-        "displayName": "Mujibu Rahuman P M",
-        "status": "active"
-    },
-    {
-        "username": "Prakash_Zencora",
-        "passwordHash": "71277a7f6e704b17c2e02cf25af55f6d64406b42bc1ec8e330244d8687969318",
-        "role": "bde",
-        "displayName": "Prakash Sah",
-        "status": "inactive"
-    },
-    {
-        "username": "Christina_Zencora",
-        "passwordHash": "71277a7f6e704b17c2e02cf25af55f6d64406b42bc1ec8e330244d8687969318",
-        "role": "bde",
-        "displayName": "Christina Marie Short",
-        "status": "active"
-    },
-    {
-        "username": "md_rifa",
-        "passwordHash": "522d567ed9b8df2d4ebdbe16c5acaf79fb1654ac53dc3d57357713d5d61684a4",
-        "role": "bde",
-        "displayName": "Mohamed Rifahath",
-        "status": "active"
-    }
+  {
+    "username": "ceo",
+    "passwordHash": "4445d328252601d795228de88d097ffd6688f7b8de88de62c698317d9a7e2abe",
+    "role": "admin",
+    "displayName": "Mujibu Rahuman P M",
+    "email": "ceo@zencorahs.com",
+    "phone": "+1 555-0100",
+    "avatar": "",
+    "status": "active"
+  },
+  {
+    "username": "Prakash_Zencora",
+    "passwordHash": "71277a7f6e704b17c2e02cf25af55f6d64406b42bc1ec8e330244d8687969318",
+    "role": "bde",
+    "displayName": "Prakash Sah",
+    "email": "prakash@zencorahs.com",
+    "phone": "+1 303-968-9512",
+    "avatar": "",
+    "status": "inactive"
+  },
+  {
+    "username": "Christina_Zencora",
+    "passwordHash": "71277a7f6e704b17c2e02cf25af55f6d64406b42bc1ec8e330244d8687969318",
+    "role": "bde",
+    "displayName": "Christina Marie Short",
+    "email": "christina@zencorahs.com",
+    "phone": "+1 555-0145",
+    "avatar": "",
+    "status": "active"
+  },
+  {
+    "username": "md_rifa",
+    "passwordHash": "522d567ed9b8df2d4ebdbe16c5acaf79fb1654ac53dc3d57357713d5d61684a4",
+    "role": "bde",
+    "displayName": "Mohamed Rifahath",
+    "email": "rifa@zencorahs.com",
+    "phone": "+1 555-0188",
+    "avatar": "",
+    "status": "active"
+  }
 ]
