@@ -2670,7 +2670,7 @@ info@zencorahs.com | www.zencorahs.com`
 
             alertBox.style.display = 'none';
             submitBtn.disabled = true;
-            submitBtn.innerText = "Generating Code...";
+            submitBtn.innerText = "Dispatching OTP...";
 
             try {
                 const response = await fetch('/api/forgot-password/request', {
@@ -2685,10 +2685,15 @@ info@zencorahs.com | www.zencorahs.com`
                     document.getElementById('fp-step-1').style.display = 'none';
                     document.getElementById('fp-step-2').style.display = 'flex';
                     
-                    let bannerHtml = `<strong>OTP Verification:</strong> ${data.message}`;
-                    if (data.otpDev) {
-                        bannerHtml += `<div style="margin-top:6px; font-weight:700; color:#27AE60; background:rgba(39,174,96,0.15); padding:4px 8px; border-radius:4px; display:inline-block;">⚡ Verification Code: ${data.otpDev}</div>`;
-                    }
+                    let bannerHtml = `
+                        <div style="display:flex; align-items:flex-start; gap:10px;">
+                            <span style="font-size:1.25rem;">📩</span>
+                            <div>
+                                <div style="font-weight:700; color:#2ECC71; margin-bottom:3px;">OTP Dispatched Successfully</div>
+                                <div style="font-size:0.82rem; color:rgba(255,255,255,0.9); line-height:1.4;">${data.message}</div>
+                            </div>
+                        </div>
+                    `;
                     document.getElementById('fp-destination-banner').innerHTML = bannerHtml;
                 } else {
                     alertBox.innerText = data.error || "Could not find registered account.";

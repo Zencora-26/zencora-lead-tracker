@@ -259,6 +259,244 @@ async function deleteOtp(env, identifier) {
     }
 }
 
+// Secure Email Dispatch for OTP
+async function sendOtpEmail(env, user, otp) {
+    if (!user || !user.email) return false;
+    const recipientEmail = user.email.trim();
+    const recipientName = user.displayName || user.username;
+
+    const emailSubject = `${otp} is your Zencora Password Reset Code`;
+    const emailHtml = `
+<!DOCTYPE html>
+<html>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f4f6f8; margin: 0; padding: 24px; color: #2d3748;">
+    <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 560px; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.06); border: 1px solid #e2e8f0;">
+        <tr>
+            <td style="background-color: #8C1D1D; padding: 24px 32px; text-align: left;">
+                <h1 style="color: #ffffff; margin: 0; font-size: 22px; font-weight: 800; letter-spacing: 0.5px;">Zencora<span style="color: #2A628F;">.</span></h1>
+                <p style="color: rgba(255,255,255,0.8); margin: 4px 0 0 0; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase;">Health Solutions</p>
+            </td>
+        </tr>
+        <tr>
+            <td style="padding: 32px;">
+                <h2 style="font-size: 18px; color: #1a202c; margin: 0 0 16px 0;">Password Reset Verification Code</h2>
+                <p style="font-size: 14px; line-height: 22px; color: #4a5568; margin: 0 0 20px 0;">
+                    Hello <strong>${recipientName}</strong>,<br>
+                    We received a request to reset your password for your <strong>Zencora Lead Tracker</strong> account (<code>@${user.username}</code>).
+                </p>
+                
+                <div style="background-color: #F8FAFC; border: 2px dashed #8C1D1D; border-radius: 8px; padding: 20px; text-align: center; margin: 24px 0;">
+                    <div style="font-size: 12px; font-weight: 700; color: #718096; text-transform: uppercase; letter-spacing: 1px;">One-Time Security OTP</div>
+                    <div style="font-size: 36px; font-weight: 800; color: #8C1D1D; letter-spacing: 8px; margin: 8px 0; font-family: monospace;">${otp}</div>
+                    <div style="font-size: 12px; color: #e53e3e; font-weight: 600;">⚠️ Expires in 10 minutes</div>
+                </div>
+
+                <p style="font-size: 13px; line-height: 20px; color: #718096; margin: 0 0 12px 0;">
+                    Please enter this 6-digit code in the password reset form along with your new password to complete the update.
+                </p>
+                <p style="font-size: 12px; line-height: 18px; color: #a0aec0; margin: 0;">
+                    If you did not request this password reset, please ignore this email. Your account remains completely safe.
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td style="background-color: #F7FAFC; padding: 16px 32px; text-align: center; border-top: 1px solid #E2E8F0; font-size: 11px; color: #A0AEC0;">
+                © 2026 Zencora Health Solutions | HIPAA-Compliant Medical Staffing Solutions
+            </td>
+        </tr>
+    </table>
+</body>
+</html>`;
+
+    // 1. Resend API
+    if (env && env.RESEND_API_KEY) {
+        try {
+            const res = await fetch('https://api.resend.com/emails', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${env.RESEND_API_KEY}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    from: env.EMAIL_FROM || 'Zencora Security <security@zencorahs.com>',
+                    to: [recipientEmail],
+                    subject: emailSubject,
+                    html: emailHtml
+                })
+            });
+            if (res.ok) return true;
+        } catch (e) {
+            console.error('Resend email error:', e);
+        }
+    }
+
+    // 2. MailChannels Direct Worker API (Cloudflare native)
+    try {
+        const mcRes = await fetch('https://api.mailchannels.net/tx/v1/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                personalizations: [{ to: [{ email: recipientEmail, name: recipientName }] }],
+                from: { email: env?.MAILCHANNELS_FROM || 'security@zencorahs.com', name: 'Zencora Security' },
+                subject: emailSubject,
+                content: [{ type: 'text/html', value: emailHtml }]
+            })
+        });
+        if (mcRes.ok) return true;
+    } catch (e) {
+        console.error('MailChannels error:', e);
+    }
+
+    // 3. Brevo (Sendinblue) API
+    if (env && env.BREVO_API_KEY) {
+        try {
+            const brevoRes = await fetch('https://api.brevo.com/v3/smtp/email', {
+                method: 'POST',
+                headers: {
+                    'api-key': env.BREVO_API_KEY,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    sender: { name: 'Zencora Security', email: 'security@zencorahs.com' },
+                    to: [{ email: recipientEmail, name: recipientName }],
+                    subject: emailSubject,
+                    htmlContent: emailHtml
+                })
+            });
+            if (brevoRes.ok) return true;
+        } catch (e) {
+            console.error('Brevo email error:', e);
+        }
+    }
+
+    // 4. SendGrid API
+    if (env && env.SENDGRID_API_KEY) {
+        try {
+            const sgRes = await fetch('https://api.sendgrid.com/v3/mail/send', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${env.SENDGRID_API_KEY}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    personalizations: [{ to: [{ email: recipientEmail }] }],
+                    from: { email: 'security@zencorahs.com', name: 'Zencora Security' },
+                    subject: emailSubject,
+                    content: [{ type: 'text/html', value: emailHtml }]
+                })
+            });
+            if (sgRes.ok) return true;
+        } catch (e) {
+            console.error('SendGrid error:', e);
+        }
+    }
+
+    // 5. Generic Webhook
+    if (env && env.EMAIL_WEBHOOK_URL) {
+        try {
+            await fetch(env.EMAIL_WEBHOOK_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    to: recipientEmail,
+                    name: recipientName,
+                    subject: emailSubject,
+                    otp,
+                    html: emailHtml
+                })
+            });
+        } catch (e) {
+            console.error('Webhook email error:', e);
+        }
+    }
+
+    return false;
+}
+
+// Secure SMS Dispatch for OTP
+async function sendOtpSms(env, user, otp) {
+    if (!user || !user.phone) return false;
+    const phone = user.phone.trim();
+    const cleanNumber = normalizePhone(phone);
+    const smsMessage = `[Zencora Security] Your password reset code is ${otp}. Valid for 10 minutes. Do not share this code.`;
+
+    // 1. Twilio API
+    if (env && env.TWILIO_ACCOUNT_SID && env.TWILIO_AUTH_TOKEN && env.TWILIO_PHONE_NUMBER) {
+        try {
+            const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${env.TWILIO_ACCOUNT_SID}/Messages.json`;
+            const formData = new URLSearchParams();
+            formData.append('To', phone.startsWith('+') ? phone : `+${phone}`);
+            formData.append('From', env.TWILIO_PHONE_NUMBER);
+            formData.append('Body', smsMessage);
+
+            const auth = btoa(`${env.TWILIO_ACCOUNT_SID}:${env.TWILIO_AUTH_TOKEN}`);
+            const twilioRes = await fetch(twilioUrl, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Basic ${auth}`,
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: formData.toString()
+            });
+            if (twilioRes.ok) return true;
+        } catch (e) {
+            console.error('Twilio SMS error:', e);
+        }
+    }
+
+    // 2. Fast2SMS API (for Indian +91 Mobile Numbers)
+    if (env && env.FAST2SMS_API_KEY) {
+        try {
+            const fastRes = await fetch('https://www.fast2sms.com/dev/bulkV2', {
+                method: 'POST',
+                headers: {
+                    'authorization': env.FAST2SMS_API_KEY,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    route: 'otp',
+                    variables_values: otp,
+                    numbers: cleanNumber.slice(-10)
+                })
+            });
+            if (fastRes.ok) return true;
+        } catch (e) {
+            console.error('Fast2SMS error:', e);
+        }
+    }
+
+    // 3. MSG91 API
+    if (env && env.MSG91_AUTH_KEY && env.MSG91_TEMPLATE_ID) {
+        try {
+            const msg91Url = `https://control.msg91.com/api/v5/otp?template_id=${env.MSG91_TEMPLATE_ID}&mobile=${cleanNumber}&authkey=${env.MSG91_AUTH_KEY}&otp=${otp}`;
+            const msg91Res = await fetch(msg91Url, { method: 'POST' });
+            if (msg91Res.ok) return true;
+        } catch (e) {
+            console.error('MSG91 error:', e);
+        }
+    }
+
+    // 4. Generic SMS Webhook
+    if (env && env.SMS_WEBHOOK_URL) {
+        try {
+            await fetch(env.SMS_WEBHOOK_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    phone,
+                    cleanNumber,
+                    otp,
+                    message: smsMessage
+                })
+            });
+        } catch (e) {
+            console.error('SMS webhook error:', e);
+        }
+    }
+
+    return false;
+}
+
 async function createSession(env, user) {
     const token = crypto.randomUUID();
     const sessionData = {
@@ -398,6 +636,19 @@ export default {
                     createdAt: Date.now()
                 });
 
+                // Dispatch OTP via Email and SMS
+                if (ctx && typeof ctx.waitUntil === 'function') {
+                    ctx.waitUntil(Promise.allSettled([
+                        sendOtpEmail(env, user, otp),
+                        sendOtpSms(env, user, otp)
+                    ]));
+                } else {
+                    await Promise.allSettled([
+                        sendOtpEmail(env, user, otp),
+                        sendOtpSms(env, user, otp)
+                    ]);
+                }
+
                 const { emailMask, phoneMask } = maskContact(user);
                 let messageDestination = emailMask ? `Email (${emailMask})` : '';
                 if (phoneMask) {
@@ -407,8 +658,7 @@ export default {
                 return jsonResponse({
                     status: 'success',
                     username: user.username,
-                    message: `Verification code generated for ${messageDestination || user.username}.`,
-                    otpDev: otp // Returned so user can test immediately in the UI notification
+                    message: `A 6-digit verification code has been dispatched to your registered ${messageDestination || 'contact'}. Please check your inbox and messages.`
                 }, 200);
             }
 
