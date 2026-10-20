@@ -261,7 +261,7 @@ async function deleteOtp(env, identifier) {
 
 // Secure Email Dispatch for OTP
 async function sendOtpEmail(env, user, otp) {
-    if (!user || !user.email) return false;
+    if (!user || !user.email) return { success: false, reason: 'No registered email address for user.' };
     const recipientEmail = user.email.trim();
     const recipientName = user.displayName || user.username;
 
@@ -282,7 +282,7 @@ async function sendOtpEmail(env, user, otp) {
                 <h2 style="font-size: 18px; color: #1a202c; margin: 0 0 16px 0;">Password Reset Verification Code</h2>
                 <p style="font-size: 14px; line-height: 22px; color: #4a5568; margin: 0 0 20px 0;">
                     Hello <strong>${recipientName}</strong>,<br>
-                    We received a request to reset your password for your <strong>Zencora Lead Tracker</strong> account (<code>@${user.username}</code>).
+                    We received a request to reset your password for your <strong>Zencora Lead Tracker</strong> portal account (<code>@${user.username}</code>).
                 </p>
                 
                 <div style="background-color: #F8FAFC; border: 2px dashed #8C1D1D; border-radius: 8px; padding: 20px; text-align: center; margin: 24px 0;">
@@ -308,29 +308,131 @@ async function sendOtpEmail(env, user, otp) {
 </body>
 </html>`;
 
-    // 1. Resend API
+    // 1. Resend API (Recommended - Instant & Free)
     if (env && env.RESEND_API_KEY) {
-        try {
+        const apiKey = env.RESEND_API_KEY.trim();
+        const sendWithResend = async (fromAddr) => {
             const res = await fetch('https://api.resend.com/emails', {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${env.RESEND_API_KEY}`,
+                    'Authorization': `Bearer ${apiKey}`,
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    from: env.EMAIL_FROM || 'Zencora Security <security@zencorahs.com>',
+                    from: fromAddr,
                     to: [recipientEmail],
                     subject: emailSubject,
                     html: emailHtml
                 })
             });
-            if (res.ok) return true;
+            const data = await res.json().catch(() => ({}));
+            return { ok: res.ok, data };
+        };
+
+        try {
+            // Try configured from address or default
+            let fromAddr = env.EMAIL_FROM || 'Zencora Security <security@zencorahs.com>';
+            let attempt = await sendWithResend(fromAddr);
+            if (attempt.ok) return { success: true, provider: 'Resend' };
+
+            // If domain not yet verified in Resend, automatically fallback to sandbox sender
+            let fallbackAttempt = await sendWithResend('Zencora Security <onboarding@resend.dev>');
+            if (fallbackAttempt.ok) return { success: true, provider: 'Resend (Sandbox)' };
         } catch (e) {
-            console.error('Resend email error:', e);
+            console.error('Resend error:', e);
         }
     }
 
-    // 2. MailChannels Direct Worker API (Cloudflare native)
+    // 2. Brevo (Sendinblue) API
+    if (env && env.BREVO_API_KEY) {
+        try {
+            const brevoRes = await fetch('https://api.brevo.com/v3/smtp/email', {
+                method: 'POST',
+                headers: {
+                    'api-key': env.BREVO_API_KEY.trim(),
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    sender: { name: 'Zencora Security', email: env.EMAIL_FROM || 'security@zencorahs.com' },
+                    to: [{ email: recipientEmail, name: recipientName }],
+                    subject: emailSubject,
+                    htmlContent: emailHtml
+                })
+            });
+            if (brevoRes.ok) return { success: true, provider: 'Brevo' };
+        } catch (e) {
+            console.error('Brevo error:', e);
+        }
+    }
+
+    // 3. EmailJS API
+    if (env && env.EMAILJS_SERVICE_ID && env.EMAILJS_TEMPLATE_ID && env.EMAILJS_PUBLIC_KEY) {
+        try {
+            const emailjsRes = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    service_id: env.EMAILJS_SERVICE_ID.trim(),
+                    template_id: env.EMAILJS_TEMPLATE_ID.trim(),
+                    user_id: env.EMAILJS_PUBLIC_KEY.trim(),
+                    accessToken: env.EMAILJS_PRIVATE_KEY ? env.EMAILJS_PRIVATE_KEY.trim() : undefined,
+                    template_params: {
+                        to_email: recipientEmail,
+                        to_name: recipientName,
+                        otp_code: otp,
+                        message: `Your Zencora verification code is ${otp}. Valid for 10 minutes.`
+                    }
+                })
+            });
+            if (emailjsRes.ok) return { success: true, provider: 'EmailJS' };
+        } catch (e) {
+            console.error('EmailJS error:', e);
+        }
+    }
+
+    // 4. SendGrid API
+    if (env && env.SENDGRID_API_KEY) {
+        try {
+            const sgRes = await fetch('https://api.sendgrid.com/v3/mail/send', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${env.SENDGRID_API_KEY.trim()}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    personalizations: [{ to: [{ email: recipientEmail }] }],
+                    from: { email: env.EMAIL_FROM || 'security@zencorahs.com', name: 'Zencora Security' },
+                    subject: emailSubject,
+                    content: [{ type: 'text/html', value: emailHtml }]
+                })
+            });
+            if (sgRes.ok) return { success: true, provider: 'SendGrid' };
+        } catch (e) {
+            console.error('SendGrid error:', e);
+        }
+    }
+
+    // 5. Generic Webhook
+    if (env && env.EMAIL_WEBHOOK_URL) {
+        try {
+            const whRes = await fetch(env.EMAIL_WEBHOOK_URL.trim(), {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    to: recipientEmail,
+                    name: recipientName,
+                    subject: emailSubject,
+                    otp,
+                    html: emailHtml
+                })
+            });
+            if (whRes.ok) return { success: true, provider: 'Webhook' };
+        } catch (e) {
+            console.error('Webhook email error:', e);
+        }
+    }
+
+    // 6. MailChannels Direct Worker API (Cloudflare native)
     try {
         const mcRes = await fetch('https://api.mailchannels.net/tx/v1/send', {
             method: 'POST',
@@ -342,75 +444,12 @@ async function sendOtpEmail(env, user, otp) {
                 content: [{ type: 'text/html', value: emailHtml }]
             })
         });
-        if (mcRes.ok) return true;
+        if (mcRes.ok) return { success: true, provider: 'MailChannels' };
     } catch (e) {
         console.error('MailChannels error:', e);
     }
 
-    // 3. Brevo (Sendinblue) API
-    if (env && env.BREVO_API_KEY) {
-        try {
-            const brevoRes = await fetch('https://api.brevo.com/v3/smtp/email', {
-                method: 'POST',
-                headers: {
-                    'api-key': env.BREVO_API_KEY,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    sender: { name: 'Zencora Security', email: 'security@zencorahs.com' },
-                    to: [{ email: recipientEmail, name: recipientName }],
-                    subject: emailSubject,
-                    htmlContent: emailHtml
-                })
-            });
-            if (brevoRes.ok) return true;
-        } catch (e) {
-            console.error('Brevo email error:', e);
-        }
-    }
-
-    // 4. SendGrid API
-    if (env && env.SENDGRID_API_KEY) {
-        try {
-            const sgRes = await fetch('https://api.sendgrid.com/v3/mail/send', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${env.SENDGRID_API_KEY}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    personalizations: [{ to: [{ email: recipientEmail }] }],
-                    from: { email: 'security@zencorahs.com', name: 'Zencora Security' },
-                    subject: emailSubject,
-                    content: [{ type: 'text/html', value: emailHtml }]
-                })
-            });
-            if (sgRes.ok) return true;
-        } catch (e) {
-            console.error('SendGrid error:', e);
-        }
-    }
-
-    // 5. Generic Webhook
-    if (env && env.EMAIL_WEBHOOK_URL) {
-        try {
-            await fetch(env.EMAIL_WEBHOOK_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    to: recipientEmail,
-                    name: recipientName,
-                    subject: emailSubject,
-                    otp,
-                    html: emailHtml
-                })
-            });
-        } catch (e) {
-            console.error('Webhook email error:', e);
-        }
-    }
-
-    return false;
+    return { success: false, reason: 'No transactional email provider configured.' };
 }
 
 // Secure SMS Dispatch for OTP
@@ -636,30 +675,26 @@ export default {
                     createdAt: Date.now()
                 });
 
-                // Dispatch OTP via Email and SMS
-                if (ctx && typeof ctx.waitUntil === 'function') {
-                    ctx.waitUntil(Promise.allSettled([
-                        sendOtpEmail(env, user, otp),
-                        sendOtpSms(env, user, otp)
-                    ]));
+                // Dispatch Email & SMS
+                const [emailRes] = await Promise.all([
+                    sendOtpEmail(env, user, otp),
+                    sendOtpSms(env, user, otp)
+                ]);
+
+                const { emailMask } = maskContact(user);
+
+                if (emailRes && emailRes.success) {
+                    return jsonResponse({
+                        status: 'success',
+                        username: user.username,
+                        message: `A 6-digit verification code has been dispatched to your registered Email (${emailMask || user.email}). Please check your inbox and spam folder.`
+                    }, 200);
                 } else {
-                    await Promise.allSettled([
-                        sendOtpEmail(env, user, otp),
-                        sendOtpSms(env, user, otp)
-                    ]);
+                    return jsonResponse({
+                        status: 'error',
+                        error: `Email delivery service is not configured yet. Please add RESEND_API_KEY in Cloudflare Pages Settings -> Environment variables (Free from resend.com), or contact your system administrator to reset your password.`
+                    }, 503);
                 }
-
-                const { emailMask, phoneMask } = maskContact(user);
-                let messageDestination = emailMask ? `Email (${emailMask})` : '';
-                if (phoneMask) {
-                    messageDestination += messageDestination ? ` and Mobile (${phoneMask})` : `Mobile (${phoneMask})`;
-                }
-
-                return jsonResponse({
-                    status: 'success',
-                    username: user.username,
-                    message: `A 6-digit verification code has been dispatched to your registered ${messageDestination || 'contact'}. Please check your inbox and messages.`
-                }, 200);
             }
 
             // 3. POST /api/forgot-password/reset (Verifies OTP & Sets New Password)
